@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 project(ktools)
 
 # Create the VERSION define
@@ -12,6 +12,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ZLIB REQUIRED)
+find_package(Boost 1.56 OPTIONAL_COMPONENTS log unit_test_framework)
+if(Boost_FOUND)
+	add_compile_definitions(WITH_BOOST)
+endif()
 
 # Turn on all warnings, for all compiler flavours
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

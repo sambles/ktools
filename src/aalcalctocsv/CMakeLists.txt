@@ -1,5 +1,5 @@
-add_executable(aacalctocsv)
-target_sources(aacalctocsv
+add_executable(aalcalctocsv)
+target_sources(aalcalctocsv
 	PRIVATE
 		aalcalctocsv.cpp main.cpp
 )
