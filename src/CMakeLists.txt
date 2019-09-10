@@ -1,5 +1,4 @@
-include_directories(logging)
-include_directories(filetool)
+include_directories(logging filetool ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(aalcalc)
 add_subdirectory(aalcalctocsv)

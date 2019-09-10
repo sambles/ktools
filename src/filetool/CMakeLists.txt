@@ -1,11 +1,17 @@
 add_executable(filetool)
 target_sources(filetool
-	PRIVATE main.cpp
-	PUBLIC BaseFileReader.h CoveragesFile.h DamageBinDictionaryFile.h FootprintFile.h FootprintIndexFile.h Interfaces.h ItemsFile.h VulnerabilitiesFile.h
+	PRIVATE main.cpp Interfaces.h
+	PUBLIC BaseFileReader.h CoveragesFile.h DamageBinDictionaryFile.h FootprintFile.h FootprintIndexFile.h ItemsFile.h VulnerabilitiesFile.h
 )
 
-if(Boost_FOUND)
-	target_link_libraries(filetool Boost::log z)
-else()
-	target_link_libraries(filetool z)
-endif()
+target_link_libraries(filetool Boost::log z)
+
+# -------------------------------------------------------------------------
+# Test
+add_executable(filetool_tests)
+target_sources(filetool_tests
+	PRIVATE
+		test/TestFiletoolFiles.cpp
+)
+target_include_directories(filetool_tests PRIVATE .)
+target_link_libraries(filetool_tests Boost::log Boost::unit_test_framework z)

@@ -12,10 +12,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ZLIB REQUIRED)
-find_package(Boost 1.56 OPTIONAL_COMPONENTS log unit_test_framework)
-if(Boost_FOUND)
-	add_compile_definitions(WITH_BOOST)
-endif()
+find_package(Boost 1.56 REQUIRED COMPONENTS log unit_test_framework)
+
+# Make BOOST auto-generate main method for unit tests
+ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
 # Turn on all warnings, for all compiler flavours
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -34,7 +34,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_definitions( /DUNICODE /D_UNICODE ) # it is a new millenium
 endif()
 
-
+add_test(filetool ./src/filetool/filetool_tests)
 add_test(ktest ./ktest/runtests.sh)
 add_test(ktest-extended ./ktest/runtestsx.sh)
 

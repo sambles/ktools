@@ -31,12 +31,10 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
-#ifndef __LOGGING_H__
-#define __LOGGING_H__
+#pragma once
 
 #include <string>
 
-#ifdef WITH_BOOST
 #define BOOST_LOG_DYN_LINK 1 // necessary when linking the boost_log library dynamically
 
 #include <boost/log/trivial.hpp>
@@ -45,10 +43,6 @@
 
 // just a helper macro used by the macros below - don't use it in your code
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity)
-#else
-#include <iostream>
-#define LOG(severity) std::cout << '[' << severity << "]," << __FILE__ << ':' << __LINE__
-#endif
 
 // ===== log macros =====
 #define LOG_TRACE   LOG(trace)
@@ -57,5 +51,3 @@
 #define LOG_WARNING LOG(warning)
 #define LOG_ERROR   LOG(error)
 #define LOG_FATAL   LOG(fatal)
-
-#endif
