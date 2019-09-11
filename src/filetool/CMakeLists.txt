@@ -8,6 +8,7 @@ target_link_libraries(filetool Boost::log z)
 
 # -------------------------------------------------------------------------
 # Test
+
 add_executable(filetool_tests)
 target_sources(filetool_tests
 	PRIVATE

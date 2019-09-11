@@ -35,6 +35,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 add_test(filetool ./src/filetool/filetool_tests)
+add_test(fmcalc ./src/fmcalc/fmcalc_tests)
 add_test(ktest ./ktest/runtests.sh)
 add_test(ktest-extended ./ktest/runtestsx.sh)
 

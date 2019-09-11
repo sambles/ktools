@@ -1,9 +1,10 @@
 fmcalc
 fmcalc.exe
+fmcalc_tests
+fmcalc_tests.exe
 gmon*
 *save
 *save2
 *png
 analysis.txt
 .dirstamp
-
