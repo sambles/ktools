@@ -37,51 +37,56 @@
 #include "BaseFileReader.h"
 #include "../include/oasis.h"
 
-namespace ktools { namespace filetool {
+namespace ktools {
+	namespace filetool {
+		struct fm_policyTC {
+			int level_id;
+			int agg_id;
+			int layer_id;
+			int policytc_id;
+		};
 
-class DamageBinDictionaryFile : public BaseFileReader<damagebindictionary>
-{
-public:
-    DamageBinDictionaryFile(const std::string& prefix)
-     : BaseFileReader("damage bin dictionary", prefix, DAMAGE_BIN_DICT_FILE)
-    {}
+		class FMPolicyTCFile : public BaseFileReader<fm_policyTC>
+		{
+		public:
+			FMPolicyTCFile(const std::string& prefix)
+				: BaseFileReader("fm policy tc", prefix, FMPOLICYTC_FILE)
+			{}
 
-    virtual ~DamageBinDictionaryFile() {}
-};
+			virtual ~FMPolicyTCFile() {}
+		};
 
-template<>
-struct CsvFormatter<damagebindictionary> {
-    std::string header() {
-        return  "Index,From,To,Interpolation,Interval Type";
-    }
+		template<>
+		struct CsvFormatter<fm_policyTC> {
+			std::string header() {
+				return  "layer_id,level_id,agg_id,policytc_id";
+			}
 
-    std::string row(const damagebindictionary& rec) {
-        std::stringstream ss;
-        ss << rec.bin_index << ',' << rec.bin_from << ',' << rec.bin_to << ',' << rec.interpolation << ',' << rec.interval_type;
+			std::string row(const fm_policyTC& rec) {
+				std::stringstream ss;
+				ss << rec.layer_id << ',' << rec.level_id << ',' << rec.agg_id << ',' << rec.policytc_id;
 
-        return ss.str();
-    }
-};
+				return ss.str();
+			}
+		};
 
-template<>
-struct CsvStructInitializer<damagebindictionary> {
-	void initilize(damagebindictionary& s, const std::string& field_name, const std::string& field_value) {
-		if (field_name== "index") {
-			s.bin_index = std::stoi(field_value);
-		}
-		else if (field_name == "from") {
-			s.bin_from = std::stof(field_value);
-		}
-		else if (field_name == "to") {
-			s.bin_to = std::stof(field_value);
-		}
-		else if (field_name == "interpolation") {
-			s.interpolation = std::stof(field_value);
-		}
-		else if (field_name == "interval type") {
-			s.interval_type = std::stoi(field_value);
-		}
+		template<>
+		struct CsvStructInitializer<fm_policyTC> {
+			void initilize(fm_policyTC& s, const std::string& field_name, const std::string& field_value) {
+				if (field_name == "layer_id") {
+					s.layer_id = std::stoi(field_value);
+				}
+				else if (field_name == "level_id") {
+					s.level_id = std::stoi(field_value);
+				}
+				else if (field_name == "agg_id") {
+					s.agg_id = std::stoi(field_value);
+				}
+				else if (field_name == "policytc_id") {
+					s.policytc_id = std::stoi(field_value);
+				}
+			}
+		};
+
 	}
-};
-
-}}
+}
