@@ -46,6 +46,7 @@
 #include "FootprintFile.h"
 #include "FootprintIndexFile.h"
 #include "FmPolicyTCFile.h"
+#include "EventFile.h"
 
 enum Format
 {
@@ -58,7 +59,8 @@ enum Format
 enum FileType
 {
     FT_UNKOWN,
-    FT_EVENTS,
+	FT_EVENT_GEN,
+	FT_EVENTS,
     FT_VULNERABILITIES,
     FT_DAMAGEBINDICT,
     FT_COVERAGES,
@@ -95,7 +97,9 @@ FileType parse_filetype(const std::string& filetype)
 {
     if (equals(filetype, "events") == 0) {
         return FT_EVENTS;
-    } else if (equals(filetype, "vulnerabilities") == 0) {
+	} else if (equals(filetype, "eventids") == 0) {
+		return FT_EVENT_GEN;
+	} else if (equals(filetype, "vulnerabilities") == 0) {
         return FT_VULNERABILITIES;
     } else if (equals(filetype, "damagebindict") == 0) {
         return FT_DAMAGEBINDICT;
@@ -213,7 +217,12 @@ int main(int argc, char **argv)
             read_and_print(file, output);
         }
         break;
-        case FT_VULNERABILITIES: {
+		case FT_EVENT_GEN: {
+			ktools::filetool::EventFile file(prefix);
+			read_and_print(file, output);
+		}
+		break;
+		case FT_VULNERABILITIES: {
             ktools::filetool::VulnerabilitiesFile file(prefix);
             read_and_print(file, output);
         }
