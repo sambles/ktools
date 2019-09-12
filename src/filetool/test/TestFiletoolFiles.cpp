@@ -38,6 +38,7 @@
 #include "FootprintIndexFile.h"
 #include "FootprintFile.h"
 #include "FMPolicyTCFile.h"
+#include "EventFile.h"
 
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
@@ -50,15 +51,29 @@ BOOST_AUTO_TEST_CASE(read_items_file)
 
     BOOST_REQUIRE_EQUAL(89, file.num_records());
 
-    item item_rec;
+    item rec;
     int count = 0;
-    while (file.read(item_rec)) {
+    while (file.read(rec)) {
         count++;
     }
 
     BOOST_REQUIRE_EQUAL(89, count);
 }
 
+BOOST_AUTO_TEST_CASE(read_events_file)
+{
+	ktools::filetool::EventFile file("examples");
+
+	BOOST_REQUIRE_EQUAL(249, file.num_records());
+
+	ktools::filetool::eventdata rec;
+	int count = 0;
+	while (file.read(rec)) {
+		count++;
+	}
+
+	BOOST_REQUIRE_EQUAL(249, count);
+}
 /*
 BOOST_AUTO_TEST_CASE(read_covrages_file)
 {

@@ -1,5 +1,5 @@
 /*
-* Copyright (c)2015 - 2016 Oasis LMF Limited
+* Copyright (c)2015 - 2019 Oasis LMF Limited
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,31 +31,46 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
+#pragma once
 
-/*
-evetocsv: Convert binary event stream to csv stream
-Author: Ben Matharu  email: ben.matharu@oasislmf.org
+namespace ktools { namespace filetool {
 
-*/
+struct eventdata
+{
+	int event_id;
+};
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
+class EventFile : public BaseFileReader<eventdata>
+{
+public:
+	EventFile(const std::string& prefix)
+		: BaseFileReader("events", prefix, EVENTS_FILE)
+	{}
 
-#include "../include/oasis.h"
+	virtual ~EventFile() {}
+};
 
-
-namespace evetocsv {
-	void doit(bool skipheader)
-	{
-		if (skipheader == false) printf("event_id\n");
-		int eventid;
-		while (fread(&eventid, sizeof(eventid), 1, stdin) == 1) {
-			printf("%d\n", eventid);
-		}
-
+template<>
+struct CsvFormatter<eventdata> {
+	std::string header() {
+		return  "event_id";
 	}
 
-}
+	std::string row(const eventdata& rec) {
+		std::stringstream ss;
+		ss << rec.event_id;
 
+		return ss.str();
+	}
+};
 
+template<>
+struct CsvStructInitializer<eventdata> {
+	void initilize(eventdata& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "event_id") {
+			s.event_id = std::stoi(field_value);
+		}
+	}
+};
+
+}}
