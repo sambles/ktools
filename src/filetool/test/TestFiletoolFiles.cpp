@@ -39,6 +39,7 @@
 #include "FootprintFile.h"
 #include "FMPolicyTCFile.h"
 #include "EventFile.h"
+#include "fmprofilefile.h"
 
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
@@ -171,6 +172,22 @@ BOOST_AUTO_TEST_CASE(read_fm_policy_tc_file)
 	BOOST_REQUIRE_EQUAL(96, nrec);
 
 	ktools::filetool::fm_policyTC rec;
+	int count = 0;
+	while (file.read(rec)) {
+		count++;
+	}
+
+	BOOST_REQUIRE_EQUAL(nrec, count);
+}
+
+BOOST_AUTO_TEST_CASE(read_fmprofile_file)
+{
+	ktools::filetool::FMProfileFile file("examples");
+
+	uint32_t nrec = file.num_records();
+	BOOST_REQUIRE_EQUAL(89, nrec);
+
+	fm_profile_new rec;
 	int count = 0;
 	while (file.read(rec)) {
 		count++;

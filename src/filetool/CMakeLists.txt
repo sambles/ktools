@@ -1,6 +1,6 @@
 add_executable(filetool)
 target_sources(filetool
-	PRIVATE main.cpp Interfaces.h
+	PRIVATE main.cpp Interfaces.h filetool.h filetool.cpp
 	PUBLIC BaseFileReader.h CoveragesFile.h DamageBinDictionaryFile.h FootprintFile.h FootprintIndexFile.h ItemsFile.h VulnerabilitiesFile.h
 )
 
