@@ -43,6 +43,7 @@
 #include "FmPolicyTCFile.h"
 #include "EventFile.h"
 #include "fmprofilefile.h"
+#include "fmprogrammefile.h"
 
 // ---------------------------------------------------------------------------
 // Template functions
@@ -94,7 +95,8 @@ const ktools::filetool::FileTool::FileTypeMap ktools::filetool::FileTool::_file_
 	{"footprint",       FT_FOOTPRINT},
 	{"footprintidx",    FT_FOOTPRINT_INDEX},
 	{"fmpolicytc",      FT_FM_POLICY_TC},
-	{"fmprofile",       FT_FM_PROFILE}
+	{"fmprofile",       FT_FM_PROFILE},
+	{"fmprogramme",		FT_FM_PROGRAMME}
 };
 
 const ktools::filetool::FileTool::FormatMap ktools::filetool::FileTool::_format_mapping = {
@@ -156,6 +158,11 @@ const ktools::filetool::FileTool::ExecutorMap ktools::filetool::FileTool::_execu
 	{FT_FM_PROFILE,
 	 [](const std::string& prefix, const Format output) {
 		ktools::filetool::FMProfileFile file(prefix);
+		read_and_print(file, output);
+	}},
+	{FT_FM_PROGRAMME,
+	 [](const std::string& prefix, const Format output) {
+		ktools::filetool::FMProgrammeFile file(prefix);
 		read_and_print(file, output);
 	}}
 };

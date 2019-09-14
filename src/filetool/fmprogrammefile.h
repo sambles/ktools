@@ -33,63 +33,50 @@
 */
 #pragma once
 
-#include <map>
-#include <string>
-#include <functional>
+#include <sstream>
+#include "BaseFileReader.h"
+#include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FileTool
+class FMProgrammeFile : public BaseFileReader<fm_programme>
 {
 public:
+	FMProgrammeFile(const std::string& prefix)
+		: BaseFileReader("fm programme file", prefix, FMPROGRAMME_FILE)
+	{}
 
-	enum Format
-	{
-		FMT_UNKNOWN,
-		FMT_CSV,
-		FMT_BIN,
-		FMT_JSON
-	};
+	virtual ~FMProgrammeFile() {}
+};
 
-	enum FileType
-	{
-		FT_UNKOWN,
-		FT_EVENT_GEN,
-		FT_EVENTS,
-		FT_VULNERABILITIES,
-		FT_DAMAGEBINDICT,
-		FT_COVERAGES,
-		FT_FOOTPRINT,
-		FT_FOOTPRINT_INDEX,
-		FT_FM_POLICY_TC,
-		FT_FM_PROFILE,
-		FT_FM_PROGRAMME
-	};
+template<>
+struct CsvFormatter<fm_programme> {
+	std::string header() {
 
-private:
-	typedef std::function<void(const std::string&, Format)> ConvertFunction;
-	typedef std::map<std::string, FileType> FileTypeMap;
-	typedef std::map<std::string, Format> FormatMap;
-	typedef std::map<FileType, ConvertFunction> ExecutorMap;
+		return "from_agg_id,level_id,to_agg_id";
+	}
 
-public:
-	FileTool(const std::string& prefix, const Format input_format, const Format output_format, const FileType file_type);
-	virtual ~FileTool();
+	std::string row(const fm_programme& rec) {
+		std::stringstream ss;
+		ss << rec.from_agg_id << ',' << rec.level_id << ',' << rec.to_agg_id;
 
-	void run();
+		return ss.str();
+	}
+};
 
-	static std::string get_supported_filetypes();
-	static Format convert_format(const std::string& format_str);
-	static FileType convert_filetype(const std::string& filetype_str);
-private:
-	static const FileTypeMap _file_type_mapping;
-	static const FormatMap _format_mapping;
-	static const ExecutorMap _executor_mapping;
-
-	const std::string _prefix;
-	const Format _input_format;
-	const Format _output_format;
-	const FileType _file_type;
+template<>
+struct CsvStructInitializer<fm_programme> {
+	void initilize(fm_programme& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "from_agg_id") {
+			s.from_agg_id = std::stoi(field_value);
+		}
+		else if (field_name == "level_id") {
+			s.level_id = std::stoi(field_value);
+		}
+		else if (field_name == "to_agg_id") {
+			s.to_agg_id = std::stoi(field_value);
+		}
+	}
 };
 
 }}
