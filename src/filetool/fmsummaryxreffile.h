@@ -1,5 +1,5 @@
 /*
-* Copyright (c)2015 - 2016 Oasis LMF Limited 
+* Copyright (c)2015 - 2019 Oasis LMF Limited
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,37 +31,52 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
-/*
-Author: Ben Matharu  email: ben.matharu@oasislmf.org
-*/
+#pragma once
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <sstream>
+#include "BaseFileReader.h"
 #include "../include/oasis.h"
 
-void doit()
+namespace ktools { namespace filetool {
+
+class FMSummaryXrefFile : public BaseFileReader<fmsummaryxref>
 {
+public:
+	FMSummaryXrefFile(const std::string& prefix)
+		: BaseFileReader("fm summary xref file", prefix, FMSUMMARYXREF_FILE)
+	{}
 
-	fmsummaryxref s;
-    char line[4096];
-    int lineno=0;
-	fgets(line, sizeof(line), stdin);
-	lineno++;
-    while (fgets(line, sizeof(line), stdin) != 0)
-    {
-		if (sscanf(line, "%d,%d,%d", &s.output_id, &s.summary_id, &s.summaryset_id) != 3){
-           fprintf(stderr, "Invalid data in line %d:\n%s", lineno, line);
-           return;
-       }
+	virtual ~FMSummaryXrefFile() {}
+};
 
-	    else
-       {
-           fwrite(&s, sizeof(s), 1, stdout);
-       }
-       lineno++;
-    }
+template<>
+struct CsvFormatter<fmsummaryxref> {
+	std::string header() {
 
-}
+		return "output_id,summary_id,summaryset_id";
+	}
 
+	std::string row(const fmsummaryxref& rec) {
+		std::stringstream ss;
+		ss << rec.output_id << ',' << rec.summary_id << ',' << rec.summaryset_id;
+
+		return ss.str();
+	}
+};
+
+template<>
+struct CsvStructInitializer<fmsummaryxref> {
+	void initilize(fmsummaryxref& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "output_id") {
+			s.output_id = std::stoi(field_value);
+		}
+		else if (field_name == "summary_id") {
+			s.summary_id = std::stoi(field_value);
+		}
+		else if (field_name == "summaryset_id") {
+			s.summaryset_id = std::stoi(field_value);
+		}
+	}
+};
+
+}}
