@@ -42,6 +42,7 @@
 #include "fmprofilefile.h"
 #include "fmprogrammefile.h"
 #include "fmsummaryxreffile.h"
+#include "fmxreffile.h"
 
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
@@ -222,6 +223,22 @@ BOOST_AUTO_TEST_CASE(read_fmsummaryxref_file)
 	BOOST_REQUIRE_EQUAL(4, nrec);
 
 	fmsummaryxref rec;
+	int count = 0;
+	while (file.read(rec)) {
+		count++;
+	}
+
+	BOOST_REQUIRE_EQUAL(nrec, count);
+}
+
+BOOST_AUTO_TEST_CASE(read_fmxref_file)
+{
+	ktools::filetool::FMXrefFile file("examples");
+
+	uint32_t nrec = file.num_records();
+	BOOST_REQUIRE_EQUAL(2, nrec);
+
+	fmXref rec;
 	int count = 0;
 	while (file.read(rec)) {
 		count++;

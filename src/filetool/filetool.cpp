@@ -45,6 +45,7 @@
 #include "fmprofilefile.h"
 #include "fmprogrammefile.h"
 #include "fmsummaryxreffile.h"
+#include "fmxreffile.h"
 
 // ---------------------------------------------------------------------------
 // Template functions
@@ -98,7 +99,8 @@ const ktools::filetool::FileTool::FileTypeMap ktools::filetool::FileTool::_file_
 	{"fmpolicytc",      FT_FM_POLICY_TC},
 	{"fmprofile",       FT_FM_PROFILE},
 	{"fmprogramme",		FT_FM_PROGRAMME},
-	{"fmsummaryxref",   FT_FM_SUMMARY_XREF}
+	{"fmsummaryxref",   FT_FM_SUMMARY_XREF},
+	{"fmxref",			FT_FM_XREF}
 };
 
 const ktools::filetool::FileTool::FormatMap ktools::filetool::FileTool::_format_mapping = {
@@ -171,8 +173,12 @@ const ktools::filetool::FileTool::ExecutorMap ktools::filetool::FileTool::_execu
 	 [](const std::string& prefix, const Format output) {
 		ktools::filetool::FMSummaryXrefFile file(prefix);
 		read_and_print(file, output);
-	}}
-};
+	}},
+	{FT_FM_XREF,
+	 [](const std::string& prefix, const Format output) {
+		ktools::filetool::FMXrefFile file(prefix);
+		read_and_print(file, output);
+	}} };
 
 // ---------------------------------------------------------------------------
 // FileTool method implementations

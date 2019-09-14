@@ -33,65 +33,50 @@
 */
 #pragma once
 
-#include <map>
-#include <string>
-#include <functional>
+#include <sstream>
+#include "BaseFileReader.h"
+#include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FileTool
+class FMXrefFile : public BaseFileReader<fmXref>
 {
 public:
+	FMXrefFile(const std::string& prefix)
+		: BaseFileReader("fm xref file", prefix, FMXREF_FILE)
+	{}
 
-	enum Format
-	{
-		FMT_UNKNOWN,
-		FMT_CSV,
-		FMT_BIN,
-		FMT_JSON
-	};
+	virtual ~FMXrefFile() {}
+};
 
-	enum FileType
-	{
-		FT_UNKOWN,
-		FT_EVENT_GEN,
-		FT_EVENTS,
-		FT_VULNERABILITIES,
-		FT_DAMAGEBINDICT,
-		FT_COVERAGES,
-		FT_FOOTPRINT,
-		FT_FOOTPRINT_INDEX,
-		FT_FM_POLICY_TC,
-		FT_FM_PROFILE,
-		FT_FM_PROGRAMME,
-		FT_FM_SUMMARY_XREF,
-		FT_FM_XREF
-	};
+template<>
+struct CsvFormatter<fmXref> {
+	std::string header() {
 
-private:
-	typedef std::function<void(const std::string&, Format)> ConvertFunction;
-	typedef std::map<std::string, FileType> FileTypeMap;
-	typedef std::map<std::string, Format> FormatMap;
-	typedef std::map<FileType, ConvertFunction> ExecutorMap;
+		return "output_id,agg_id,layer_id";
+	}
 
-public:
-	FileTool(const std::string& prefix, const Format input_format, const Format output_format, const FileType file_type);
-	virtual ~FileTool();
+	std::string row(const fmXref& rec) {
+		std::stringstream ss;
+		ss << rec.output_id << ',' << rec.agg_id << ',' << rec.layer_id;
 
-	void run();
+		return ss.str();
+	}
+};
 
-	static std::string get_supported_filetypes();
-	static Format convert_format(const std::string& format_str);
-	static FileType convert_filetype(const std::string& filetype_str);
-private:
-	static const FileTypeMap _file_type_mapping;
-	static const FormatMap _format_mapping;
-	static const ExecutorMap _executor_mapping;
-
-	const std::string _prefix;
-	const Format _input_format;
-	const Format _output_format;
-	const FileType _file_type;
+template<>
+struct CsvStructInitializer<fmXref> {
+	void initilize(fmXref& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "output_id") {
+			s.output_id = std::stoi(field_value);
+		}
+		else if (field_name == "agg_id") {
+			s.agg_id = std::stoi(field_value);
+		}
+		else if (field_name == "layer_id") {
+			s.layer_id = std::stoi(field_value);
+		}
+	}
 };
 
 }}
