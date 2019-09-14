@@ -65,7 +65,8 @@ public:
 		FT_FM_PROFILE,
 		FT_FM_PROGRAMME,
 		FT_FM_SUMMARY_XREF,
-		FT_FM_XREF
+		FT_FM_XREF,
+		FT_GUL_SUMMARY_XREF
 	};
 
 private:

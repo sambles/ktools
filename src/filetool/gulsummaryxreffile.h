@@ -1,5 +1,5 @@
 /*
-* Copyright (c)2015 - 2016 Oasis LMF Limited 
+* Copyright (c)2015 - 2019 Oasis LMF Limited
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,44 +31,53 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
-/*
-Author: Ben Matharu  email: ben.matharu@oasislmf.org
-*/
+#pragma once
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <sstream>
+#include "BaseFileReader.h"
 #include "../include/oasis.h"
-#if defined(_MSC_VER)
-#include "../wingetopt/wingetopt.h"
-#else
-#include <unistd.h>
-#endif
 
-namespace gulsummaryxreftobin {
-	void doit()
-	{
+namespace ktools { namespace filetool {
 
-		gulsummaryxref s;
-		char line[4096];
-		int lineno = 0;
-		fgets(line, sizeof(line), stdin);
-		lineno++;
-		while (fgets(line, sizeof(line), stdin) != 0)
+		class GulSummaryXrefFile : public BaseFileReader<gulsummaryxref>
 		{
-			if (sscanf(line, "%d,%d,%d", &s.coverage_id, &s.summary_id, &s.summaryset_id) != 3) {
-				fprintf(stderr, "Invalid data in line %d:\n%s", lineno, line);
-				return;
+		public:
+			GulSummaryXrefFile(const std::string& prefix)
+				: BaseFileReader("gul summary xref file", prefix, GULSUMMARYXREF_FILE)
+			{}
+
+			virtual ~GulSummaryXrefFile() {}
+		};
+
+		template<>
+		struct CsvFormatter<gulsummaryxref> {
+			std::string header() {
+
+				return "coverage_id,summary_id,summaryset_id";
 			}
 
-			else
-			{
-				fwrite(&s, sizeof(s), 1, stdout);
+			std::string row(const gulsummaryxref& rec) {
+				std::stringstream ss;
+				ss << rec.coverage_id << ',' << rec.summary_id << ',' << rec.summaryset_id;
+
+				return ss.str();
 			}
-			lineno++;
-		}
+		};
+
+		template<>
+		struct CsvStructInitializer<gulsummaryxref> {
+			void initilize(gulsummaryxref& s, const std::string& field_name, const std::string& field_value) {
+				if (field_name == "coverage_id") {
+					s.coverage_id = std::stoi(field_value);
+				}
+				else if (field_name == "summary_id") {
+					s.summary_id = std::stoi(field_value);
+				}
+				else if (field_name == "summaryset_id") {
+					s.summaryset_id = std::stoi(field_value);
+				}
+			}
+		};
 
 	}
-
 }

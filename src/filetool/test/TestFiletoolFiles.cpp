@@ -43,6 +43,7 @@
 #include "fmprogrammefile.h"
 #include "fmsummaryxreffile.h"
 #include "fmxreffile.h"
+#include "gulsummaryxreffile.h"
 
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
@@ -247,4 +248,19 @@ BOOST_AUTO_TEST_CASE(read_fmxref_file)
 	BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
+BOOST_AUTO_TEST_CASE(read_gul_summary_xref_file)
+{
+	ktools::filetool::GulSummaryXrefFile file("examples");
+
+	uint32_t nrec = file.num_records();
+	BOOST_REQUIRE_EQUAL(178, nrec);
+
+	gulsummaryxref rec;
+	int count = 0;
+	while (file.read(rec)) {
+		count++;
+	}
+
+	BOOST_REQUIRE_EQUAL(nrec, count);
+}
 BOOST_AUTO_TEST_SUITE_END()
