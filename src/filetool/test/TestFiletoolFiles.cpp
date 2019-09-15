@@ -45,6 +45,7 @@
 #include "fmxreffile.h"
 #include "gulsummaryxreffile.h"
 #include "periodsfile.h"
+#include "returnperiodfile.h"
 
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
@@ -280,4 +281,21 @@ BOOST_AUTO_TEST_CASE(read_periods_file)
 
 	BOOST_REQUIRE_EQUAL(nrec, count);
 }
+
+BOOST_AUTO_TEST_CASE(read_return_period_file)
+{
+	ktools::filetool::ReturnPeriodFile file("examples");
+
+	uint32_t nrec = file.num_records();
+	BOOST_REQUIRE_EQUAL(14, nrec);
+
+	ktools::filetool::return_period rec;
+	int count = 0;
+	while (file.read(rec)) {
+		count++;
+	}
+
+	BOOST_REQUIRE_EQUAL(nrec, count);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

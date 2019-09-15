@@ -1,5 +1,5 @@
 /*
-* Copyright (c)2015 - 2016 Oasis LMF Limited 
+* Copyright (c)2015 - 2019 Oasis LMF Limited
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,64 +31,51 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
-/*
-Author: Ben Matharu  email: ben.matharu@oasislmf.org
-*/
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
+#pragma once
 
-#if defined(_MSC_VER)
-#include "../wingetopt/wingetopt.h"
-#else
-#include <unistd.h>
-#endif
-
+#include <sstream>
+#include "BaseFileReader.h"
 #include "../include/oasis.h"
 
-void doit(bool skipheader)
+namespace ktools { namespace filetool {
+
+struct return_period 
 {
+	int return_period;
+};
 
-    int return_period;
-	if (skipheader==false) printf("return_period\n");
-    while (fread(&return_period, sizeof(return_period), 1, stdin) == 1){
-        printf("%d\n",return_period);
-    }
-
-}
-
-void help()
+class ReturnPeriodFile : public BaseFileReader<return_period>
 {
-	fprintf(stderr, 
-		"-s skip header\n"
-		"-h help\n"
-		"-v version\n"
-	);
-}
+public:
+	ReturnPeriodFile(const std::string& prefix)
+		: BaseFileReader("return periods file", prefix, RETURNPERIODS_FILE)
+	{}
 
-int main(int argc, char *argv[])
-{
-	int opt;
-	bool skipheader = false;
-	while ((opt = getopt(argc, argv, "vhs")) != -1) {
-		switch (opt) {
-		case 's':
-			skipheader = true;
-			break;
-		case 'v':
-			fprintf(stderr, "%s : version: %s\n", argv[0], VERSION);
-			::exit(EXIT_FAILURE);
-			break;
-		case 'h':
-		default:
-			help();
-			::exit(EXIT_FAILURE);
-		}
+	virtual ~ReturnPeriodFile() {}
+};
+
+template<>
+struct CsvFormatter<return_period> {
+	std::string header() {
+
+		return "return_period";
 	}
 
-	initstreams();
-	doit(skipheader);
-	return EXIT_SUCCESS;
-}
+	std::string row(const return_period& rec) {
+		std::stringstream ss;
+		ss << rec.return_period;
 
+		return ss.str();
+	}
+};
 
+template<>
+struct CsvStructInitializer<return_period> {
+	void initilize(return_period& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "return_period") {
+			s.return_period = std::stoi(field_value);
+		}
+	}
+};
+
+}}
