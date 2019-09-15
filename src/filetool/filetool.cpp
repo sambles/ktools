@@ -47,6 +47,7 @@
 #include "fmsummaryxreffile.h"
 #include "fmxreffile.h"
 #include "gulsummaryxreffile.h"
+#include "periodsfile.h"
 
 // ---------------------------------------------------------------------------
 // Template functions
@@ -102,7 +103,8 @@ const ktools::filetool::FileTool::FileTypeMap ktools::filetool::FileTool::_file_
 	{"fmprogramme",		FT_FM_PROGRAMME},
 	{"fmsummaryxref",   FT_FM_SUMMARY_XREF},
 	{"fmxref",			FT_FM_XREF},
-	{"gulsummaryxref",	FT_GUL_SUMMARY_XREF}
+	{"gulsummaryxref",	FT_GUL_SUMMARY_XREF},
+	{"periods",			FT_PERIODS}
 };
 
 const ktools::filetool::FileTool::FormatMap ktools::filetool::FileTool::_format_mapping = {
@@ -184,6 +186,11 @@ const ktools::filetool::FileTool::ExecutorMap ktools::filetool::FileTool::_execu
 	{FT_GUL_SUMMARY_XREF,
 	 [](const std::string& prefix, const Format output) {
 		ktools::filetool::GulSummaryXrefFile file(prefix);
+		read_and_print(file, output);
+	}},
+	{FT_PERIODS,
+	 [](const std::string& prefix, const Format output) {
+		ktools::filetool::PeriodsFile file(prefix);
 		read_and_print(file, output);
 	}}
 };

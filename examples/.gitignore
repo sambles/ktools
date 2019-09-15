@@ -3,11 +3,9 @@ results
 *.z
 *.hex
 *.out
-*.csv
 temp
 *.bin.save
 g
-input/periods.bin
 aal_p1.bin
 *.save
 ben.py

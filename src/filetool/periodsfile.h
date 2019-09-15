@@ -1,5 +1,5 @@
 /*
-* Copyright (c)2015 - 2016 Oasis LMF Limited 
+* Copyright (c)2015 - 2019 Oasis LMF Limited
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,79 +31,49 @@
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 * DAMAGE.
 */
-/*
-Author: Ben Matharu  email: ben.matharu@oasislmf.org
-*/
+#pragma once
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-
-#if defined(_MSC_VER)
-#include "../wingetopt/wingetopt.h"
-#else
-#include <unistd.h>
-#endif
-
+#include <sstream>
+#include "BaseFileReader.h"
 #include "../include/oasis.h"
 
+namespace ktools { namespace filetool {
 
-void doit()
+class PeriodsFile : public BaseFileReader<Periods>
 {
+public:
+	PeriodsFile(const std::string& prefix)
+		: BaseFileReader("periods file", prefix, PERIODS_FILE)
+	{}
 
-	Periods p;
-    char line[4096];
-    int lineno=0;
+	virtual ~PeriodsFile() {}
+};
 
-	fgets(line, sizeof(line), stdin);
-	lineno++;
-    while (fgets(line, sizeof(line), stdin) != 0)
-    {
-		if (sscanf(line, "%d,%lf", &p.period_no, &p.weighting) != 2){
-           fprintf(stderr, "Invalid data in line %d:\n%s", lineno, line);
-           return;
-       }
+template<>
+struct CsvFormatter<Periods> {
+	std::string header() {
 
-	    else
-       {		   
-           fwrite(&p, sizeof(p), 1, stdout);
-       }
-       lineno++;
-    }
+		return "period_no,weighting";
+	}
 
-}
+	std::string row(const Periods& rec) {
+		std::stringstream ss;
+		ss << rec.period_no << ',' << rec.weighting;
 
-void help()
-{
-	fprintf(stderr,
-		"Convert periods csv to periods.bin"
-		"-v version\n"
-		"-h help\n"
-	)
-	;
-}
+		return ss.str();
+	}
+};
 
-int main(int argc, char *argv[])
-{
-	int opt;
-
-	while ((opt = getopt(argc, argv, "vh")) != -1) {
-		switch (opt) {		
-		case 'v':
-			fprintf(stderr, "%s : version: %s\n", argv[0], VERSION);
-			exit(EXIT_FAILURE);
-			break;
-		case 'h':
-			help();
-			exit(EXIT_FAILURE);
-		default:
-			help();
-			exit(EXIT_FAILURE);
+template<>
+struct CsvStructInitializer<Periods> {
+	void initilize(Periods& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "period_no") {
+			s.period_no = std::stoi(field_value);
+		}
+		else if (field_name == "weighting") {
+			s.weighting = std::stod(field_value);
 		}
 	}
-	
+};
 
-	initstreams("", "");
-    doit();
-    return EXIT_SUCCESS;
-}
+}}
