@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(read_events_file)
 
 	BOOST_REQUIRE_EQUAL(249, count);
 }
-/*
+
 BOOST_AUTO_TEST_CASE(read_covrages_file)
 {
     ktools::filetool::CoveragesFile file("examples");
@@ -93,11 +93,12 @@ BOOST_AUTO_TEST_CASE(read_covrages_file)
 	int count = 0;
     while (file.read(rec)) {
         count++;
+
+		BOOST_REQUIRE_EQUAL(count, rec.coverage_id);
     }
 
     BOOST_REQUIRE_EQUAL(nrec, count);
 }
-*/
 
 BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file)
 {

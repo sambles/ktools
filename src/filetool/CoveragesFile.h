@@ -49,6 +49,25 @@ public:
     {}
 
     virtual ~CoveragesFile() {}
+
+	virtual bool read(coveragesdata& rec) {
+		_stream.read(reinterpret_cast<char*>(&rec.tiv), sizeof(rec.tiv));
+		rec.coverage_id = _coverage_id++;
+
+		bool fail = !_stream;
+
+		return !fail;
+	}
+
+protected:
+
+	virtual int record_size() const {
+		coveragesdata rec;
+		return sizeof(rec.tiv);
+	}
+
+private:
+	int _coverage_id = 1;
 };
 
 template<>

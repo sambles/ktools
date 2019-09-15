@@ -84,7 +84,7 @@ public:
         int sz = _stream.tellg();
         _stream.seekg(0, _stream.beg);
 
-        return static_cast<uint32_t>(sz / sizeof(T));
+        return static_cast<uint32_t>(sz / record_size());
     }
 
     virtual bool read(T& rec) {
@@ -94,6 +94,12 @@ public:
 
         return !fail;
     }
+
+protected:
+
+	virtual int record_size() const {
+		return sizeof(T);
+	}
 
 private:
 
