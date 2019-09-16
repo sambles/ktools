@@ -42,6 +42,9 @@
 #include <map>
 #include "getmodel.h"
 #include "../include/oasis.h"
+#include "VulnerabilitiesFile.h"
+#include "FootprintFile.h"
+#include "ItemsFile.h"
 #ifndef _MSC_VER
 #include <zlib.h>
 #endif
@@ -90,60 +93,45 @@ getmodel::~getmodel() {
 // only get those vulnerabilities that exist in the items file - so reduce
 // memory footprint
 void getmodel::getVulnerabilities(const std::set<int> &v) {
-  // Read the vulnerabilities
-  Vulnerability vulnerability;
+	ktools::filetool::VulnerabilityBinFileReader file("./");
 
-  FILE *fin = fopen(VULNERABILITY_FILE, "rb");
-  if (fin == nullptr) {
-    fprintf(stderr, "%s: cannot open %s\n", __func__, VULNERABILITY_FILE);
-    exit(EXIT_FAILURE);
-  }
-  int current_vulnerability_id = -1;
-  fread(&_num_damage_bins, sizeof(_num_damage_bins), 1, fin);
+    // Read the vulnerabilities
+    Vulnerability vulnerability;
+    int current_vulnerability_id = -1;
+	while (file.read(vulnerability)) {
 
-  while (fread(&vulnerability, sizeof(vulnerability), 1, fin) != 0) {
-    if (v.find(vulnerability.vulnerability_id) !=
-        v.end()) { // only process those vulnerabilities that are in the item
-                   // file
-      if (_num_intensity_bins >= vulnerability.intensity_bin_id) {
-        if (vulnerability.vulnerability_id != current_vulnerability_id) {
-          _vulnerabilities[vulnerability.vulnerability_id] =
-              std::vector<OASIS_FLOAT>(_num_intensity_bins * _num_damage_bins, 0.0);
-          current_vulnerability_id = vulnerability.vulnerability_id;
+	  // only process those vulnerabilities that are in the item file
+      if (v.find(vulnerability.vulnerability_id) != v.end()) { 
+        if (_num_intensity_bins >= vulnerability.intensity_bin_id) {
+          if (vulnerability.vulnerability_id != current_vulnerability_id) {
+            _vulnerabilities[vulnerability.vulnerability_id] =
+                std::vector<OASIS_FLOAT>(_num_intensity_bins * _num_damage_bins, 0.0);
+            current_vulnerability_id = vulnerability.vulnerability_id;
+          }
+
+          int vulnerabilityIndex = getVulnerabilityIndex(
+              vulnerability.intensity_bin_id, vulnerability.damage_bin_id);
+          _vulnerabilities[vulnerability.vulnerability_id][vulnerabilityIndex] =
+              vulnerability.probability;
         }
-        int vulnerabilityIndex = getVulnerabilityIndex(
-            vulnerability.intensity_bin_id, vulnerability.damage_bin_id);
-        _vulnerabilities[vulnerability.vulnerability_id][vulnerabilityIndex] =
-            vulnerability.probability;
-      }
     }
   }
-  fclose(fin);
 }
 
 void getmodel::getIntensityInfo() {
-  FILE *fin = fopen(FOOTPRINT_FILE, "rb");
-  if (fin == nullptr) {
-    fprintf(stderr, "%s: cannot open %s\n", __func__, FOOTPRINT_FILE);
-    exit(EXIT_FAILURE);
-  }
-  fread(&_num_intensity_bins, sizeof(_num_intensity_bins), 1, fin);
-  fread(&_has_intensity_uncertainty, sizeof(_has_intensity_uncertainty), 1,
-        fin);
-  fclose(fin);
+	ktools::filetool::FootprintBinFileReader file("./");
+
+	_num_intensity_bins = file.num_intensity_bins();
+	_has_intensity_uncertainty = file.has_intensity_uncertainty();
 }
 
 void getmodel::getItems(std::set<int> &v) {
+	ktools::filetool::ItemBinFileReader file("./");
+
   // Read the exposures and generate a set of vulnerabilities by area peril
   item item_rec;
 
-  FILE *fin = fopen(ITEMS_FILE, "rb");
-  if (fin == nullptr) {
-    fprintf(stderr, "%s: cannot open %s\n", __func__, ITEMS_FILE);
-    exit(EXIT_FAILURE);
-  }
-
-  while (fread(&item_rec, sizeof(item_rec), 1, fin) != 0) {
+  while (file.read(item_rec)) {
     if (_vulnerability_ids_by_area_peril.count(item_rec.areaperil_id) == 0)
       _vulnerability_ids_by_area_peril[item_rec.areaperil_id] = std::set<int>();
     _vulnerability_ids_by_area_peril[item_rec.areaperil_id].insert(
@@ -151,7 +139,6 @@ void getmodel::getItems(std::set<int> &v) {
     _area_perils.insert(item_rec.areaperil_id);
     v.insert(item_rec.vulnerability_id);
   }
-  fclose(fin);
 }
 
 void getmodel::getDamageBinDictionary() {

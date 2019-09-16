@@ -40,7 +40,7 @@ Author: Ben Matharu  email: ben.matharu@oasislmf.org
 #include <vector>
 
 #include "../include/oasis.h"
-
+#include "DamageBinDictionaryFile.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -49,31 +49,6 @@ Author: Ben Matharu  email: ben.matharu@oasislmf.org
 using namespace std;
 
 namespace cdftocsv {
-	bool getdamagebindictionary(std::vector<damagebindictionary> &damagebindictionary_vec_)
-	{
-
-		FILE *fin = fopen(DAMAGE_BIN_DICT_FILE, "rb");
-		if (fin == NULL) {
-			return false;
-		}
-		flseek(fin, 0L, SEEK_END);
-		long long sz = fltell(fin);
-		flseek(fin, 0L, SEEK_SET);
-		unsigned int nrec = static_cast<unsigned int> (sz / sizeof(damagebindictionary));
-		damagebindictionary *s1 = new damagebindictionary[nrec];
-		if (fread(s1, sizeof(damagebindictionary), nrec, fin) != nrec) {
-			fprintf(stderr, "Error reading file\n");
-			exit(-1);
-		}
-
-		for (unsigned int i = 0; i < nrec; i++) {
-			damagebindictionary_vec_.push_back(s1[i]);
-		}
-		delete[] s1;
-
-		fclose(fin);
-		return true;
-	}
 
 	bool getrec(char *rec_, FILE *stream, int recsize_)
 	{
@@ -89,17 +64,14 @@ namespace cdftocsv {
 		}
 
 		return true;
-
 	}
-
 
 	struct prob_mean {
 		OASIS_FLOAT prob_to;
 		OASIS_FLOAT bin_mean;
 	};
 
-	void processrec(char *rec, int recsize,
-		const std::vector<damagebindictionary> &damagebindictionary_vec_)
+	void processrec(char *rec)
 	{
 		damagecdfrec *d = (damagecdfrec *)rec;
 		char *b = rec + sizeof(damagecdfrec);
@@ -115,19 +87,18 @@ namespace cdftocsv {
 			pp++;
 		}
 	}
+
 	void doit(bool skipheader)
 	{
-
-		if (skipheader == false) fprintf(stdout, "event_id,areaperil_id,vulnerability_id,bin_index,prob_to,bin_mean\n");
-		std::vector<damagebindictionary> damagebindictionary_vec;
-		getdamagebindictionary(damagebindictionary_vec);
-		size_t total_bins = damagebindictionary_vec.size();
+		ktools::filetool::DamageBinDictonaryBinFileReader file("./");
+		size_t total_bins = file.num_records();
 		if (total_bins == 0) total_bins = 10000;
 		int max_recsize = (int)(total_bins * sizeof(prob_mean)) + sizeof(damagecdfrec) + sizeof(int);
 
 		char *rec = new char[max_recsize];
 		int stream_type = 0;
 
+		if (skipheader == false) fprintf(stdout, "event_id,areaperil_id,vulnerability_id,bin_index,prob_to,bin_mean\n");
 		bool bSuccess = getrec((char *)&stream_type, stdin, sizeof(stream_type));
 
 		if (stream_type != 1) {
@@ -147,7 +118,7 @@ namespace cdftocsv {
 			bSuccess = getrec(p, stdin, recsize);
 			recsize += sizeof(damagecdfrec) + sizeof(int);
 
-			processrec(rec, recsize, damagebindictionary_vec);
+			processrec(rec);
 		}
 	}
 

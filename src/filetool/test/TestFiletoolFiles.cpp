@@ -1,44 +1,44 @@
 /*
-* Copyright (c)2015 - 2019 Oasis LMF Limited
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*
-*   * Redistributions in binary form must reproduce the above copyright
-*     notice, this list of conditions and the following disclaimer in
-*     the documentation and/or other materials provided with the
-*     distribution.
-*
-*   * Neither the original author of this software nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-* COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
-* OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-* AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-* OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-* THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-* DAMAGE.
-*/
-#include "ItemsFile.h"
+ * Copyright (c)2015 - 2019 Oasis LMF Limited
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *   * Neither the original author of this software nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ */
 #include "CoveragesFile.h"
 #include "DamageBinDictionaryFile.h"
-#include "VulnerabilitiesFile.h"
-#include "FootprintIndexFile.h"
-#include "FootprintFile.h"
-#include "FMPolicyTCFile.h"
 #include "EventFile.h"
+#include "FMPolicyTCFile.h"
+#include "FootprintFile.h"
+#include "FootprintIndexFile.h"
+#include "ItemsFile.h"
+#include "VulnerabilitiesFile.h"
 #include "fmprofilefile.h"
 #include "fmprogrammefile.h"
 #include "fmsummaryxreffile.h"
@@ -50,10 +50,9 @@
 #define BOOST_TEST_MODULE TestFiles
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE( TestFiles );
+BOOST_AUTO_TEST_SUITE(TestFiles);
 
-BOOST_AUTO_TEST_CASE(read_items_file)
-{
+BOOST_AUTO_TEST_CASE(read_items_file) {
     ktools::filetool::ItemBinFileReader file("examples");
 
     BOOST_REQUIRE_EQUAL(89, file.num_records());
@@ -67,41 +66,38 @@ BOOST_AUTO_TEST_CASE(read_items_file)
     BOOST_REQUIRE_EQUAL(89, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_events_file)
-{
-	ktools::filetool::EventBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_events_file) {
+    ktools::filetool::EventBinFileReader file("examples");
 
-	BOOST_REQUIRE_EQUAL(249, file.num_records());
+    BOOST_REQUIRE_EQUAL(249, file.num_records());
 
-	ktools::filetool::eventdata rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    ktools::filetool::eventdata rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(249, count);
+    BOOST_REQUIRE_EQUAL(249, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_covrages_file)
-{
+BOOST_AUTO_TEST_CASE(read_covrages_file) {
     ktools::filetool::CoveragesBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
     BOOST_REQUIRE_EQUAL(89, nrec);
 
-	ktools::filetool::coveragedata rec;
-	int count = 0;
+    ktools::filetool::coveragedata rec;
+    int count = 0;
     while (file.read(rec)) {
         count++;
 
-		BOOST_REQUIRE_EQUAL(count, rec.coverage_id);
+        BOOST_REQUIRE_EQUAL(count, rec.coverage_id);
     }
 
     BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file)
-{
+BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file) {
     ktools::filetool::DamageBinDictonaryBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
@@ -116,8 +112,7 @@ BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file)
     BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_vulnerabilities_file)
-{
+BOOST_AUTO_TEST_CASE(read_vulnerabilities_file) {
     ktools::filetool::VulnerabilityBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
@@ -132,8 +127,7 @@ BOOST_AUTO_TEST_CASE(read_vulnerabilities_file)
     BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_footprint_index_file)
-{
+BOOST_AUTO_TEST_CASE(read_footprint_index_file) {
     ktools::filetool::FootprintIndexBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
@@ -148,8 +142,7 @@ BOOST_AUTO_TEST_CASE(read_footprint_index_file)
     BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_footprint_file)
-{
+BOOST_AUTO_TEST_CASE(read_footprint_file) {
     ktools::filetool::FootprintIndexBinFileReader index_file("examples");
     ktools::filetool::FootprintBinFileReader file("examples");
 
@@ -159,7 +152,7 @@ BOOST_AUTO_TEST_CASE(read_footprint_file)
             continue;
         }
         file.init(index);
-        
+
         EventRow row;
         int count = 0;
         while (file.read(row)) {
@@ -170,133 +163,124 @@ BOOST_AUTO_TEST_CASE(read_footprint_file)
     }
 }
 
+BOOST_AUTO_TEST_CASE(read_fm_policy_tc_file) {
+    ktools::filetool::FMPolicyTCBinFileReader file("examples");
 
-BOOST_AUTO_TEST_CASE(read_fm_policy_tc_file)
-{
-	ktools::filetool::FMPolicyTCBinFileReader file("examples");
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(96, nrec);
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(96, nrec);
+    ktools::filetool::fm_policyTC rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	ktools::filetool::fm_policyTC rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
-
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_fmprofile_file)
-{
-	ktools::filetool::FMProfileBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_fmprofile_file) {
+    ktools::filetool::FMProfileBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(89, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(89, nrec);
 
-	fm_profile_new rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    fm_profile_new rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_fmprogramme_file)
-{
-	ktools::filetool::FMProgrammeBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_fmprogramme_file) {
+    ktools::filetool::FMProgrammeBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(183, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(183, nrec);
 
-	fm_programme rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    fm_programme rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_fmsummaryxref_file)
-{
-	ktools::filetool::FMSummaryXrefBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_fmsummaryxref_file) {
+    ktools::filetool::FMSummaryXrefBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(4, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(4, nrec);
 
-	fmsummaryxref rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    fmsummaryxref rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_fmxref_file)
-{
-	ktools::filetool::FMXrefBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_fmxref_file) {
+    ktools::filetool::FMXrefBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(2, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(2, nrec);
 
-	fmXref rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    fmXref rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_gul_summary_xref_file)
-{
-	ktools::filetool::GulSummaryXrefBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_gul_summary_xref_file) {
+    ktools::filetool::GulSummaryXrefBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(178, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(178, nrec);
 
-	gulsummaryxref rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    gulsummaryxref rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_periods_file)
-{
-	ktools::filetool::PeriodsBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_periods_file) {
+    ktools::filetool::PeriodsBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(3, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(3, nrec);
 
-	Periods rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    Periods rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
-BOOST_AUTO_TEST_CASE(read_return_period_file)
-{
-	ktools::filetool::ReturnPeriodBinFileReader file("examples");
+BOOST_AUTO_TEST_CASE(read_return_period_file) {
+    ktools::filetool::ReturnPeriodBinFileReader file("examples");
 
-	uint32_t nrec = file.num_records();
-	BOOST_REQUIRE_EQUAL(14, nrec);
+    uint32_t nrec = file.num_records();
+    BOOST_REQUIRE_EQUAL(14, nrec);
 
-	ktools::filetool::return_period rec;
-	int count = 0;
-	while (file.read(rec)) {
-		count++;
-	}
+    ktools::filetool::return_period rec;
+    int count = 0;
+    while (file.read(rec)) {
+        count++;
+    }
 
-	BOOST_REQUIRE_EQUAL(nrec, count);
+    BOOST_REQUIRE_EQUAL(nrec, count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
