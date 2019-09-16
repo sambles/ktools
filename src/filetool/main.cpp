@@ -53,9 +53,9 @@ void print_help() {
 
 int main(int argc, char **argv)
 {
-	ktools::filetool::FileTool::Format input;
-	ktools::filetool::FileTool::Format output;
-    ktools::filetool::FileTool::FileType file_type;
+	ktools::filetool::FileTool::Format input = ktools::filetool::FileTool::FMT_UNKNOWN;
+	ktools::filetool::FileTool::Format output = ktools::filetool::FileTool::FMT_UNKNOWN;
+    ktools::filetool::FileTool::FileType file_type = ktools::filetool::FileTool::FT_UNKOWN; 
     std::string prefix = "";
     bool pipe_mode = false;
 
@@ -64,27 +64,15 @@ int main(int argc, char **argv)
 		switch (opt) {
             case 'o':
                 output = ktools::filetool::FileTool::convert_format(optarg);
-				if (output == ktools::filetool::FileTool::FMT_UNKNOWN) {
-					std::cerr << "Invalid output format " << optarg << std::endl;
-					exit(1);
-				}
 				break;
 			case 'i':
 				input = ktools::filetool::FileTool::convert_format(optarg);
-				if (input == ktools::filetool::FileTool::FMT_UNKNOWN) {
-					std::cerr << "Invalid input format " << optarg << std::endl;
-					exit(1);
-				}
 				break;
 			case 'r':
                 prefix = optarg;
                 break;
             case 't':
                 file_type = ktools::filetool::FileTool::convert_filetype(optarg);
-				if (file_type == ktools::filetool::FileTool::FT_UNKOWN) {
-					std::cerr << "Invalid file type " << optarg << std::endl;
-					exit(1);
-				}
                 break;
             case 'p':
                 std::cout << "pipe mode" << std::endl;
@@ -96,6 +84,25 @@ int main(int argc, char **argv)
                 exit(0);
         }
     }
+
+	if (output == ktools::filetool::FileTool::FMT_UNKNOWN) {
+		std::cerr << "Invalid/missing output format" << std::endl;
+		exit(1);
+	}
+
+	if (input == ktools::filetool::FileTool::FMT_UNKNOWN) {
+		std::cerr << "Invalid/missing input format" << std::endl;
+		exit(1);
+	}
+
+	if (file_type == ktools::filetool::FileTool::FT_UNKOWN) {
+		std::cerr << "Invalid/missing file type" << std::endl;
+		exit(1);
+	}
+
+	if (pipe_mode) {
+		prefix = "-";
+	}
 
 	ktools::filetool::FileTool filetool(prefix, input, output, file_type);
 	filetool.run();
