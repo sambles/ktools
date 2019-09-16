@@ -81,10 +81,10 @@ struct FileReaderSpecialization {
 	static std::string bin_filename() { return ""; }
 	static std::string csv_header() { return ""; }
 
-	static BaseFileReader<T>* csv_reader(const std::string& path) { return nullptr; }
-	static BaseFileReader<T>* bin_reader(const std::string& prefix) { return nullptr;  }
+	static BaseFileReader<T>* csv_reader(const std::string& ) { return nullptr; }
+	static BaseFileReader<T>* bin_reader(const std::string& ) { return nullptr;  }
 
-	static void to_csv(const T& row, std::stringstream& ss) {}
+	static void to_csv(const T& , std::stringstream& ) {}
 	static void from_csv(T& s, const std::string& field_name, const std::string& field_value) {}
 };
 

@@ -124,7 +124,8 @@ const ktools::filetool::FileTool::FileTypeMap ktools::filetool::FileTool::_file_
 	{"fmxref",			FT_FM_XREF},
 	{"gulsummaryxref",	FT_GUL_SUMMARY_XREF},
 	{"periods",			FT_PERIODS},
-	{"returnperiod",    FT_RETURN_PERIOD}
+	{"returnperiod",    FT_RETURN_PERIOD},
+	{"aacalc",			FT_AALCALC}
 };
 
 const ktools::filetool::FileTool::FormatMap ktools::filetool::FileTool::_format_mapping = {
@@ -208,6 +209,10 @@ const ktools::filetool::FileTool::ExecutorMap ktools::filetool::FileTool::_execu
 	{FT_VULNERABILITIES,
 	 [](const std::string& prefix, const Format input, const Format output) {
 		read_and_print<Vulnerability>(prefix, input, output);
+	}},
+	{FT_AALCALC,
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<aal_rec>(prefix, input, output);
 	}}
 };
 

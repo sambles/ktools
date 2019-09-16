@@ -68,7 +68,8 @@ public:
 		FT_FM_XREF,
 		FT_GUL_SUMMARY_XREF,
 		FT_PERIODS,
-		FT_RETURN_PERIOD
+		FT_RETURN_PERIOD,
+		FT_AALCALC
 	};
 
 private:
