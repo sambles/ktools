@@ -38,7 +38,7 @@
 #include <list>
 #include <functional>
 #include <vector>
-#include <string.h>
+#include <cstring>
 #include <errno.h>
 
 #include "log.h"
@@ -55,7 +55,7 @@ protected:
     BaseFileReader(const std::string& path) {
         _stream.open(path, std::ios::in | std::ios::binary);
         if (!_stream) {
-            LOG_ERROR << "Can not open " << path << ": " << strerror(errno);
+            LOG_ERROR << "Can not open " << path << ": " << std::strerror(errno);
             exit(EXIT_FAILURE);
         }
 

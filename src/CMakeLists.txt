@@ -25,4 +25,7 @@ add_subdirectory(summarycalctobin)
 add_subdirectory(summarycalctocsv)
 add_subdirectory(summaryindex)
 add_subdirectory(validateitems)
-#add_subdirectory(wingetopt)
+if (WIN32)
+	add_subdirectory(wingetopt)
+endif()
+

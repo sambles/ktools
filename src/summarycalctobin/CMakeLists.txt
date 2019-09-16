@@ -4,3 +4,7 @@ target_sources(summarycalctobin
 		summarycalctobin.cpp
 )
 
+if (WIN32)
+	target_link_libraries(summarycalctobin wingetopt)
+endif()
+

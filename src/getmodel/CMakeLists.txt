@@ -5,3 +5,8 @@ target_sources(getmodel
 )
 
 target_link_libraries(getmodel z)
+
+if (WIN32)
+	target_link_libraries(getmodel wingetopt z)
+endif()
+
