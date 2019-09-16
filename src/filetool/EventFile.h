@@ -33,40 +33,37 @@
 */
 #pragma once
 
+#include "binfilereader.h"
+#include "csvfilereader.h"
+
 namespace ktools { namespace filetool {
 
-struct eventdata
-{
+struct eventdata {
 	int event_id;
 };
 
-class EventFile : public BaseFileReader<eventdata>
-{
-public:
-	EventFile(const std::string& prefix)
-		: BaseFileReader("events", prefix, EVENTS_FILE)
-	{}
-
-	virtual ~EventFile() {}
-};
+typedef BinFileReader<eventdata> EventBinFileReader;
+typedef CsvFileReader<eventdata> EventCsvFileReader;
 
 template<>
-struct CsvFormatter<eventdata> {
-	std::string header() {
-		return  "event_id";
+struct FileReaderSpecialization<eventdata> {
+	static std::string object_name() { return "events"; }
+	static std::string bin_filename() { return EVENTS_FILE; }
+	static std::string csv_header() { return "event_id"; }
+
+	static BaseFileReader<eventdata>* csv_reader(const std::string& path) {
+		return new EventCsvFileReader(path);
 	}
 
-	std::string row(const eventdata& rec) {
-		std::stringstream ss;
+	static BaseFileReader<eventdata>* bin_reader(const std::string& prefix) {
+		return new EventBinFileReader(prefix);
+	}
+
+	static void to_csv(const eventdata& rec, std::stringstream& ss) {
 		ss << rec.event_id;
-
-		return ss.str();
 	}
-};
 
-template<>
-struct CsvStructInitializer<eventdata> {
-	void initilize(eventdata& s, const std::string& field_name, const std::string& field_value) {
+	static void from_csv(eventdata& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "event_id") {
 			s.event_id = std::stoi(field_value);
 		}

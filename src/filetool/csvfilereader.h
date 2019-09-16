@@ -33,52 +33,64 @@
 */
 #pragma once
 
-#include <sstream>
-#include "binfilereader.h"
-#include "csvfilereader.h"
+#include "BaseFileReader.h"
 
 namespace ktools { namespace filetool {
-struct fm_policyTC {
-	int level_id;
-	int agg_id;
-	int layer_id;
-	int policytc_id;
+
+template<typename T>
+class CsvFileReader : public BaseFileReader<T> {
+public:
+	CsvFileReader(const std::string& path)
+		: BaseFileReader<T>(path) {
+		// Read the first line as the header
+		read_and_split_line(_header);
+	}
+
+	virtual bool read(T& rec) {
+		std::vector<std::string> line;
+		if (!read_and_split_line(line)) {
+			return false;
+		}
+
+		for (size_t i = 0; i < _header.size(); i++) {
+			const std::string& field_name = _header.at(i);
+			const std::string& field_value = line.at(i);
+
+			FileReaderSpecialization<T>::from_csv(rec, field_name, field_value);
+		}
+
+		return true;
+	}
+
+private:
+
+	bool read_and_split_line(std::vector<std::string>& result) {
+		std::string read_line;
+		std::getline(BaseFileReader<T>::_stream, read_line);
+		bool fail = !BaseFileReader<T>::_stream;
+
+		// Exit if read operation failed
+		if (fail) {
+			return false;
+		}
+
+		split_line(read_line, result);
+		return true;
+	}
+
+	void split_line(std::string& line, std::vector<std::string>& result) {
+		// Split the line and put individual items in result
+		result.clear();
+		std::istringstream split(line);
+		std::string s;
+		while (getline(split, s, ',')) {
+			result.push_back(s);
+		}
+	}
+
+protected:
+	std::vector<std::string> _header;
+	std::ifstream _stream;
 };
 
-typedef BinFileReader<fm_policyTC> FMPolicyTCBinFileReader;
-typedef CsvFileReader<fm_policyTC> FMPolicyTCCsvFileReader;
-
-template<>
-struct FileReaderSpecialization<fm_policyTC> {
-	static std::string object_name() { return "fm policy tc"; }
-	static std::string bin_filename() { return FMPOLICYTC_FILE; }
-	static std::string csv_header() { return "layer_id,level_id,agg_id,policytc_id"; }
-
-	static BaseFileReader<fm_policyTC>* csv_reader(const std::string& path) {
-		return new FMPolicyTCCsvFileReader(path);
-	}
-
-	static BaseFileReader<fm_policyTC>* bin_reader(const std::string& prefix) {
-		return new FMPolicyTCBinFileReader(prefix);
-	}
-
-	static void to_csv(const fm_policyTC& rec, std::stringstream& ss) {
-		ss << rec.layer_id << ',' << rec.level_id << ',' << rec.agg_id << ',' << rec.policytc_id;
-	}
-
-	static void from_csv(fm_policyTC& s, const std::string& field_name, const std::string& field_value) {
-		if (field_name == "layer_id") {
-			s.layer_id = std::stoi(field_value);
-		}
-		else if (field_name == "level_id") {
-			s.level_id = std::stoi(field_value);
-		}
-		else if (field_name == "agg_id") {
-			s.agg_id = std::stoi(field_value);
-		}
-		else if (field_name == "policytc_id") {
-			s.policytc_id = std::stoi(field_value);
-		}
-	}
-};
 }}

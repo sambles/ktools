@@ -34,39 +34,34 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FMSummaryXrefFile : public BaseFileReader<fmsummaryxref>
-{
-public:
-	FMSummaryXrefFile(const std::string& prefix)
-		: BaseFileReader("fm summary xref file", prefix, FMSUMMARYXREF_FILE)
-	{}
-
-	virtual ~FMSummaryXrefFile() {}
-};
+typedef BinFileReader<fmsummaryxref> FMSummaryXrefBinFileReader;
+typedef CsvFileReader<fmsummaryxref> FMSummaryXrefCsvFileReader;
 
 template<>
-struct CsvFormatter<fmsummaryxref> {
-	std::string header() {
+struct FileReaderSpecialization<fmsummaryxref> {
+	static std::string object_name() { return "fm summary xref"; }
+	static std::string bin_filename() { return FMSUMMARYXREF_FILE; }
+	static std::string csv_header() { return "output_id,summary_id,summaryset_id"; }
 
-		return "output_id,summary_id,summaryset_id";
+	static BaseFileReader<fmsummaryxref>* csv_reader(const std::string& path) {
+		return new FMSummaryXrefCsvFileReader(path);
 	}
 
-	std::string row(const fmsummaryxref& rec) {
-		std::stringstream ss;
+	static BaseFileReader<fmsummaryxref>* bin_reader(const std::string& prefix) {
+		return new FMSummaryXrefBinFileReader(prefix);
+	}
+
+	static void to_csv(const fmsummaryxref& rec, std::stringstream& ss) {
 		ss << rec.output_id << ',' << rec.summary_id << ',' << rec.summaryset_id;
-
-		return ss.str();
 	}
-};
 
-template<>
-struct CsvStructInitializer<fmsummaryxref> {
-	void initilize(fmsummaryxref& s, const std::string& field_name, const std::string& field_value) {
+	static void from_csv(fmsummaryxref& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "output_id") {
 			s.output_id = std::stoi(field_value);
 		}

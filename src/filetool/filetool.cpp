@@ -54,38 +54,56 @@
 // Template functions
 
 template<typename T>
-void read_and_print_csv(ktools::filetool::BaseFileReader<T>& reader) {
-	ktools::filetool::CsvFormatter<T> formatter;
+void print_data(ktools::filetool::BaseFileReader<T>& reader, const ktools::filetool::FileTool::Format output) {
+	std::stringstream ss;
 
-	std::cout << formatter.header() << std::endl;
+	// For CSV output, print the header
+	if (output == ktools::filetool::FileTool::FMT_CSV) {
+		std::cout << ktools::filetool::FileReaderSpecialization<T>::csv_header() << std::endl;
+	}
+
 	T rec;
 	while (reader.read(rec)) {
-		std::cout << formatter.row(rec) << std::endl;
+		switch (output) {
+		case ktools::filetool::FileTool::FMT_BIN:
+			std::cout.write(reinterpret_cast<const char*>(&rec), sizeof(rec));
+			break;
+		case ktools::filetool::FileTool::FMT_CSV:
+			ss.clear();
+			ktools::filetool::FileReaderSpecialization<T>::to_csv(rec, ss);
+			std::cout << ss.str() << std::endl;
+			break;
+		case ktools::filetool::FileTool::FMT_UNKNOWN:
+		case ktools::filetool::FileTool::FMT_JSON:
+			std::cerr << "Unhandled output format" << std::endl;
+			break;
+		}
 	}
-	std::cout.flush();
 }
 
 template<typename T>
-void read_and_print_bin(ktools::filetool::BaseFileReader<T>& reader) {
-	T rec;
-	while (reader.read(rec)) {
-		std::cout.write(reinterpret_cast<const char*>(&rec), sizeof(rec));
-	}
-	std::cout.flush();
-}
-
-template<typename T>
-void read_and_print(ktools::filetool::BaseFileReader<T>& reader, const ktools::filetool::FileTool::Format output) {
-	switch (output) {
-	case ktools::filetool::FileTool::FMT_CSV:
-		read_and_print_csv(reader);
-		break;
+ktools::filetool::BaseFileReader<T>* create_reader(const std::string& prefix, const ktools::filetool::FileTool::Format input) {
+	switch (input) {
 	case ktools::filetool::FileTool::FMT_BIN:
-		read_and_print_bin(reader);
+		return ktools::filetool::FileReaderSpecialization<T>::bin_reader(prefix);
 		break;
+	case ktools::filetool::FileTool::FMT_CSV:
+		return ktools::filetool::FileReaderSpecialization<T>::csv_reader(prefix);
+		break;
+	case ktools::filetool::FileTool::FMT_UNKNOWN:
+	case ktools::filetool::FileTool::FMT_JSON:
 	default:
-		std::cerr << "Unhandled output type specified" << std::endl;
+		return nullptr;
 	}
+}
+
+template<typename T>
+void read_and_print(const std::string& prefix, const ktools::filetool::FileTool::Format input, const ktools::filetool::FileTool::Format output) {
+	ktools::filetool::BaseFileReader<T>* reader = create_reader<T>(prefix, input);
+
+	print_data<T>(*reader, output);
+
+	delete reader;
 }
 
 // ---------------------------------------------------------------------------
@@ -117,88 +135,79 @@ const ktools::filetool::FileTool::FormatMap ktools::filetool::FileTool::_format_
 
 const ktools::filetool::FileTool::ExecutorMap ktools::filetool::FileTool::_executor_mapping = {
 	{FT_EVENTS,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::ItemsFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<item>(prefix, input, output);
 	}},
 	{FT_EVENT_GEN,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::EventFile file(prefix);
-		read_and_print(file, output);
-	}},
-	{FT_VULNERABILITIES,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::VulnerabilitiesFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<eventdata>(prefix, input, output);
 	}},
 	{FT_DAMAGEBINDICT,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::DamageBinDictionaryFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<damagebindictionary>(prefix, input, output);
 	}},
 	{FT_COVERAGES,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::CoveragesFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<ktools::filetool::coveragedata>(prefix, input, output);
 	}},
 	{FT_FOOTPRINT_INDEX,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FootprintIndexFile file(prefix, false);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<EventIndex>(prefix, input, output);
 	}},
 	{FT_FOOTPRINT,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FootprintIndexFile index_file(prefix, false);
-		ktools::filetool::FootprintFile file(prefix, false);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		if (input == ktools::filetool::FileTool::FMT_CSV) {
+			read_and_print<EventRow>(prefix, input, output);
+		}
+		else {
+			ktools::filetool::FootprintIndexBinFileReader index_file(prefix);
+			ktools::filetool::FootprintBinFileReader file(prefix);
 
-		EventIndex index;
-		while (index_file.read(index)) {
-			if (index.size == 0) {
-				continue;
+			EventIndex index;
+			while (index_file.read(index)) {
+				if (index.size == 0) {
+					continue;
+				}
+				file.init(index);
+				print_data(file, output);
 			}
-			file.init(index);
-			read_and_print(file, output);
 		}
 	}},
 	{FT_FM_POLICY_TC,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FMPolicyTCFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<ktools::filetool::fm_policyTC>(prefix, input, output);
 	}},
 	{FT_FM_PROFILE,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FMProfileFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<fm_profile_new>(prefix, input, output);
 	}},
 	{FT_FM_PROGRAMME,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FMProgrammeFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<fm_programme>(prefix, input, output);
 	}},
 	{FT_FM_SUMMARY_XREF,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FMSummaryXrefFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<fmsummaryxref>(prefix, input, output);
 	}},
 	{FT_FM_XREF,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::FMXrefFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<fmXref>(prefix, input, output);
 	}},
 	{FT_GUL_SUMMARY_XREF,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::GulSummaryXrefFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<gulsummaryxref>(prefix, input, output);
 	}},
 	{FT_PERIODS,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::PeriodsFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<Periods>(prefix, input, output);
 	}},
 	{FT_RETURN_PERIOD,
-	 [](const std::string& prefix, const Format output) {
-		ktools::filetool::ReturnPeriodFile file(prefix);
-		read_and_print(file, output);
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<ktools::filetool::return_period>(prefix, input, output);
+	}},
+	{FT_VULNERABILITIES,
+	 [](const std::string& prefix, const Format input, const Format output) {
+		read_and_print<Vulnerability>(prefix, input, output);
 	}}
 };
 
@@ -222,7 +231,7 @@ void ktools::filetool::FileTool::run()
 {
 	auto itr = _executor_mapping.find(_file_type);
 	if (itr != _executor_mapping.end()) {
-		itr->second(_prefix, _output_format);
+		itr->second(_prefix, _input_format, _output_format);
 	}
 }
 

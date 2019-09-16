@@ -34,33 +34,44 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FootprintIndexFile : public BaseFileReader<EventIndex>
-{
-public:
-    FootprintIndexFile(const std::string& prefix, bool zip)
-     : BaseFileReader("footprint index", prefix, (zip ? ZFOOTPRINT_IDX_FILE : FOOTPRINT_IDX_FILE))
-    {}
-
-    virtual ~FootprintIndexFile() {}
-};
+typedef BinFileReader<EventIndex> FootprintIndexBinFileReader;
+typedef CsvFileReader<EventIndex> FootprintIndexCsvFileReader;
 
 template<>
-struct CsvFormatter<EventIndex> {
-    std::string header() {
-        return  "Event Id,Offset,Size";
-    }
+struct FileReaderSpecialization<EventIndex> {
+	static std::string object_name() { return  "footprint index"; }
+	static std::string bin_filename() { return FOOTPRINT_IDX_FILE; }
+	static std::string csv_header() { return "event_id,offset,size"; }
 
-    std::string row(const EventIndex& rec) {
-        std::stringstream ss;
-        ss << rec.event_id << ',' << rec.offset << ',' << rec.size;
+	static BaseFileReader<EventIndex>* csv_reader(const std::string& path) {
+		return new FootprintIndexCsvFileReader(path);
+	}
 
-        return ss.str();
-    }
+	static BaseFileReader<EventIndex>* bin_reader(const std::string& prefix) {
+		return new FootprintIndexBinFileReader(prefix);
+	}
+
+	static void to_csv(const EventIndex& rec, std::stringstream& ss) {
+		ss << rec.event_id << ',' << rec.offset << ',' << rec.size;
+	}
+
+	static void from_csv(EventIndex& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "event_id") {
+			s.event_id = std::stoi(field_value);
+		}
+		else if (field_name == "offset") {
+			s.offset = std::stoll(field_value);
+		}
+		else if (field_name == "size") {
+			s.size = std::stoll(field_value);
+		}
+	}
 };
 
 }}

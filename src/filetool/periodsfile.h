@@ -34,39 +34,34 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class PeriodsFile : public BaseFileReader<Periods>
-{
-public:
-	PeriodsFile(const std::string& prefix)
-		: BaseFileReader("periods file", prefix, PERIODS_FILE)
-	{}
-
-	virtual ~PeriodsFile() {}
-};
+typedef BinFileReader<Periods> PeriodsBinFileReader;
+typedef CsvFileReader<Periods> PeriodsCsvFileReader;
 
 template<>
-struct CsvFormatter<Periods> {
-	std::string header() {
+struct FileReaderSpecialization<Periods> {
+	static std::string object_name() { return "periods"; }
+	static std::string bin_filename() { return PERIODS_FILE; }
+	static std::string csv_header() { return "period_no,weighting"; }
 
-		return "period_no,weighting";
+	static BaseFileReader<Periods>* csv_reader(const std::string& path) {
+		return new PeriodsCsvFileReader(path);
 	}
 
-	std::string row(const Periods& rec) {
-		std::stringstream ss;
+	static BaseFileReader<Periods>* bin_reader(const std::string& prefix) {
+		return new PeriodsBinFileReader(prefix);
+	}
+
+	static void to_csv(const Periods& rec, std::stringstream& ss) {
 		ss << rec.period_no << ',' << rec.weighting;
-
-		return ss.str();
 	}
-};
 
-template<>
-struct CsvStructInitializer<Periods> {
-	void initilize(Periods& s, const std::string& field_name, const std::string& field_value) {
+	static void from_csv(Periods& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "period_no") {
 			s.period_no = std::stoi(field_value);
 		}

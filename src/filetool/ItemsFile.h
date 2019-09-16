@@ -34,33 +34,50 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class ItemsFile : public BaseFileReader<item>
-{
-public:
-    ItemsFile(const std::string& prefix)
-     : BaseFileReader("vulnerability items", prefix, ITEMS_FILE)
-    {}
-
-    virtual ~ItemsFile() {}
-};
+typedef BinFileReader<item> ItemBinFileReader;
+typedef CsvFileReader<item> ItemCsvFileReader;
 
 template<>
-struct CsvFormatter<item> {
-    std::string header() {
-        return  "Id,Coverage Id, Area Peril Id, Vulnerability Id, Group Id";
-    }
+struct FileReaderSpecialization<item> {
+	static std::string object_name() { return "vulnerability item"; }
+	static std::string bin_filename() { return ITEMS_FILE; }
+	static std::string csv_header() { return "id,coverage_id,areaperil_id,vulnerability_id,group_id"; }
 
-    std::string row(const item& rec) {
-        std::stringstream ss;
-        ss << rec.id << ',' << rec.coverage_id << ',' << rec.areaperil_id << ',' << rec.vulnerability_id << ',' << rec.group_id;
+	static BaseFileReader<item>* csv_reader(const std::string& path) {
+		return new ItemCsvFileReader(path);
+	}
 
-        return ss.str();
-    }
+	static BaseFileReader<item>* bin_reader(const std::string& prefix) {
+		return new ItemBinFileReader(prefix);
+	}
+
+	static void to_csv(const item& rec, std::stringstream& ss) {
+		ss << rec.id << ',' << rec.coverage_id << ',' << rec.areaperil_id << ',' << rec.vulnerability_id << ',' << rec.group_id;
+	}
+
+	static void from_csv(item& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "id") {
+			s.id = std::stoi(field_value);
+		}
+		else if (field_name == "coverage_id") {
+			s.coverage_id = std::stoi(field_value);
+		}
+		else if (field_name == "areaperil_id") {
+			s.areaperil_id = std::stoi(field_value);
+		}
+		else if (field_name == "vulnerability_id") {
+			s.vulnerability_id = std::stoi(field_value);
+		}
+		else if (field_name == "group_id") {
+			s.group_id = std::stoi(field_value);
+		}
+	}
 };
 
 }}

@@ -34,51 +34,47 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class DamageBinDictionaryFile : public BaseFileReader<damagebindictionary>
-{
-public:
-    DamageBinDictionaryFile(const std::string& prefix)
-     : BaseFileReader("damage bin dictionary", prefix, DAMAGE_BIN_DICT_FILE)
-    {}
-
-    virtual ~DamageBinDictionaryFile() {}
-};
+typedef BinFileReader<damagebindictionary> DamageBinDictonaryBinFileReader;
+typedef CsvFileReader<damagebindictionary> DamageBinDictonaryCsvFileReader;
 
 template<>
-struct CsvFormatter<damagebindictionary> {
-    std::string header() {
-        return  "Index,From,To,Interpolation,Interval Type";
-    }
+struct FileReaderSpecialization<damagebindictionary> {
+	static std::string object_name() { return "damage bin dictionary"; }
+	static std::string bin_filename() { return DAMAGE_BIN_DICT_FILE; }
+	static std::string csv_header() { return "bin_index,bin_from,bin_to,interpolation,interval_type"; }
 
-    std::string row(const damagebindictionary& rec) {
-        std::stringstream ss;
-        ss << rec.bin_index << ',' << rec.bin_from << ',' << rec.bin_to << ',' << rec.interpolation << ',' << rec.interval_type;
+	static BaseFileReader<damagebindictionary>* csv_reader(const std::string& path) {
+		return new DamageBinDictonaryCsvFileReader(path);
+	}
 
-        return ss.str();
-    }
-};
+	static BaseFileReader<damagebindictionary>* bin_reader(const std::string& prefix) {
+		return new DamageBinDictonaryBinFileReader(prefix);
+	}
 
-template<>
-struct CsvStructInitializer<damagebindictionary> {
-	void initilize(damagebindictionary& s, const std::string& field_name, const std::string& field_value) {
-		if (field_name== "index") {
+	static void to_csv(const damagebindictionary& rec, std::stringstream& ss) {
+		ss << rec.bin_index << ',' << rec.bin_from << ',' << rec.bin_to << ',' << rec.interpolation << ',' << rec.interval_type;
+	}
+
+	static void from_csv(damagebindictionary& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "bin_index") {
 			s.bin_index = std::stoi(field_value);
 		}
-		else if (field_name == "from") {
+		else if (field_name == "bin_from") {
 			s.bin_from = std::stof(field_value);
 		}
-		else if (field_name == "to") {
+		else if (field_name == "bin_to") {
 			s.bin_to = std::stof(field_value);
 		}
 		else if (field_name == "interpolation") {
 			s.interpolation = std::stof(field_value);
 		}
-		else if (field_name == "interval type") {
+		else if (field_name == "interval_type") {
 			s.interval_type = std::stoi(field_value);
 		}
 	}

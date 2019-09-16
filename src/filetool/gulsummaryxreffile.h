@@ -34,50 +34,44 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-		class GulSummaryXrefFile : public BaseFileReader<gulsummaryxref>
-		{
-		public:
-			GulSummaryXrefFile(const std::string& prefix)
-				: BaseFileReader("gul summary xref file", prefix, GULSUMMARYXREF_FILE)
-			{}
+typedef BinFileReader<gulsummaryxref> GulSummaryXrefBinFileReader;
+typedef CsvFileReader<gulsummaryxref> GulSummaryXrefCsvFileReader;
 
-			virtual ~GulSummaryXrefFile() {}
-		};
+template<>
+struct FileReaderSpecialization<gulsummaryxref> {
+	static std::string object_name() { return "gul summary xref"; }
+	static std::string bin_filename() { return GULSUMMARYXREF_FILE; }
+	static std::string csv_header() { return "coverage_id,summary_id,summaryset_id"; }
 
-		template<>
-		struct CsvFormatter<gulsummaryxref> {
-			std::string header() {
-
-				return "coverage_id,summary_id,summaryset_id";
-			}
-
-			std::string row(const gulsummaryxref& rec) {
-				std::stringstream ss;
-				ss << rec.coverage_id << ',' << rec.summary_id << ',' << rec.summaryset_id;
-
-				return ss.str();
-			}
-		};
-
-		template<>
-		struct CsvStructInitializer<gulsummaryxref> {
-			void initilize(gulsummaryxref& s, const std::string& field_name, const std::string& field_value) {
-				if (field_name == "coverage_id") {
-					s.coverage_id = std::stoi(field_value);
-				}
-				else if (field_name == "summary_id") {
-					s.summary_id = std::stoi(field_value);
-				}
-				else if (field_name == "summaryset_id") {
-					s.summaryset_id = std::stoi(field_value);
-				}
-			}
-		};
-
+	static BaseFileReader<gulsummaryxref>* csv_reader(const std::string& path) {
+		return new GulSummaryXrefCsvFileReader(path);
 	}
-}
+
+	static BaseFileReader<gulsummaryxref>* bin_reader(const std::string& prefix) {
+		return new GulSummaryXrefBinFileReader(prefix);
+	}
+
+	static void to_csv(const gulsummaryxref& rec, std::stringstream& ss) {
+		ss << rec.coverage_id << ',' << rec.summary_id << ',' << rec.summaryset_id;
+	}
+
+	static void from_csv(gulsummaryxref& s, const std::string& field_name, const std::string& field_value) {
+		if (field_name == "coverage_id") {
+			s.coverage_id = std::stoi(field_value);
+		}
+		else if (field_name == "summary_id") {
+			s.summary_id = std::stoi(field_value);
+		}
+		else if (field_name == "summaryset_id") {
+			s.summaryset_id = std::stoi(field_value);
+		}
+	}
+};
+
+}}

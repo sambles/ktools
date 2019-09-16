@@ -33,24 +33,29 @@
 */
 #pragma once
 
+#include "csvfilereader.h"
+#include "binfilereader.h"
+
 namespace ktools { namespace filetool {
 
-struct coveragesdata
+struct coveragedata
 {
 	int coverage_id;
 	OASIS_FLOAT tiv;
 };
 
-class CoveragesFile : public BaseFileReader<coveragesdata>
+typedef CsvFileReader<coveragedata> CoveragesCsvFileReader;
+
+class CoveragesBinFileReader : public BinFileReader<coveragedata>
 {
 public:
-    CoveragesFile(const std::string& prefix)
-     : BaseFileReader("coverages", prefix, COVERAGES_FILE)
+	CoveragesBinFileReader(const std::string& prefix)
+     : BinFileReader(prefix)
     {}
 
-    virtual ~CoveragesFile() {}
+    virtual ~CoveragesBinFileReader() {}
 
-	virtual bool read(coveragesdata& rec) {
+	virtual bool read(coveragedata& rec) {
 		_stream.read(reinterpret_cast<char*>(&rec.tiv), sizeof(rec.tiv));
 		rec.coverage_id = _coverage_id++;
 
@@ -62,7 +67,7 @@ public:
 protected:
 
 	virtual int record_size() const {
-		coveragesdata rec;
+		coveragedata rec;
 		return sizeof(rec.tiv);
 	}
 
@@ -71,22 +76,24 @@ private:
 };
 
 template<>
-struct CsvFormatter<coveragesdata> {
-    std::string header() {
-        return  "coverage_id,tiv";
-    }
+struct FileReaderSpecialization<coveragedata> {
+	static std::string object_name() { return "coverages"; };
+	static std::string bin_filename() { return COVERAGES_FILE; }
+	static std::string csv_header() { return "coverage_id,tiv"; }
 
-    std::string row(const coveragesdata& rec) {
-        std::stringstream ss;
-        ss << rec.coverage_id << "," << rec.tiv;
+	static BaseFileReader<coveragedata>* csv_reader(const std::string& path) {
+		return new CoveragesCsvFileReader(path);
+	}
 
-        return ss.str();
-    }
-};
+	static BaseFileReader<coveragedata>* bin_reader(const std::string& prefix) {
+		return new CoveragesBinFileReader(prefix);
+	}
 
-template<>
-struct CsvStructInitializer<coveragesdata> {
-	void initilize(coveragesdata& s, const std::string& field_name, const std::string& field_value) {
+	static void to_csv(const coveragedata& rec, std::stringstream& ss) {
+		ss << rec.coverage_id << "," << rec.tiv;
+	}
+
+	static void from_csv(coveragedata& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "coverage_id") {
 			s.coverage_id = std::stoi(field_value);
 		}

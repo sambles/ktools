@@ -33,52 +33,54 @@
 */
 #pragma once
 
-#include <sstream>
-#include "binfilereader.h"
-#include "csvfilereader.h"
+#include "BaseFileReader.h"
 
 namespace ktools { namespace filetool {
-struct fm_policyTC {
-	int level_id;
-	int agg_id;
-	int layer_id;
-	int policytc_id;
+
+template<typename T>
+class BinFileReader : public BaseFileReader<T> {
+public:
+	BinFileReader(const std::string& prefix)
+		: BaseFileReader<T>(prefixed_path(prefix, FileReaderSpecialization<T>::bin_filename()))
+	{
+	}
+
+	virtual ~BinFileReader() {
+	}
+
+public:
+	uint32_t num_records() {
+		BaseFileReader<T>::_stream.seekg(0, BaseFileReader<T>::_stream.end);
+		int sz = BaseFileReader<T>::_stream.tellg();
+		BaseFileReader<T>::_stream.seekg(0, BaseFileReader<T>::_stream.beg);
+
+		return static_cast<uint32_t>(sz / record_size());
+	}
+
+	virtual bool read(T& rec) {
+		BaseFileReader<T>::_stream.read(reinterpret_cast<char*>(&rec), sizeof(T));
+
+		bool fail = !BaseFileReader<T>::_stream;
+
+		return !fail;
+	}
+
+protected:
+
+	virtual int record_size() const {
+		return sizeof(T);
+	}
+
+private:
+
+	std::string prefixed_path(const std::string& prefix, const std::string& filename) const {
+		if (!prefix.empty())
+		{
+			return prefix + "/" + filename;
+		}
+
+		return filename;
+	}
 };
 
-typedef BinFileReader<fm_policyTC> FMPolicyTCBinFileReader;
-typedef CsvFileReader<fm_policyTC> FMPolicyTCCsvFileReader;
-
-template<>
-struct FileReaderSpecialization<fm_policyTC> {
-	static std::string object_name() { return "fm policy tc"; }
-	static std::string bin_filename() { return FMPOLICYTC_FILE; }
-	static std::string csv_header() { return "layer_id,level_id,agg_id,policytc_id"; }
-
-	static BaseFileReader<fm_policyTC>* csv_reader(const std::string& path) {
-		return new FMPolicyTCCsvFileReader(path);
-	}
-
-	static BaseFileReader<fm_policyTC>* bin_reader(const std::string& prefix) {
-		return new FMPolicyTCBinFileReader(prefix);
-	}
-
-	static void to_csv(const fm_policyTC& rec, std::stringstream& ss) {
-		ss << rec.layer_id << ',' << rec.level_id << ',' << rec.agg_id << ',' << rec.policytc_id;
-	}
-
-	static void from_csv(fm_policyTC& s, const std::string& field_name, const std::string& field_value) {
-		if (field_name == "layer_id") {
-			s.layer_id = std::stoi(field_value);
-		}
-		else if (field_name == "level_id") {
-			s.level_id = std::stoi(field_value);
-		}
-		else if (field_name == "agg_id") {
-			s.agg_id = std::stoi(field_value);
-		}
-		else if (field_name == "policytc_id") {
-			s.policytc_id = std::stoi(field_value);
-		}
-	}
-};
 }}

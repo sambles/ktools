@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_SUITE( TestFiles );
 
 BOOST_AUTO_TEST_CASE(read_items_file)
 {
-    ktools::filetool::ItemsFile file("examples");
+    ktools::filetool::ItemBinFileReader file("examples");
 
     BOOST_REQUIRE_EQUAL(89, file.num_records());
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(read_items_file)
 
 BOOST_AUTO_TEST_CASE(read_events_file)
 {
-	ktools::filetool::EventFile file("examples");
+	ktools::filetool::EventBinFileReader file("examples");
 
 	BOOST_REQUIRE_EQUAL(249, file.num_records());
 
@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE(read_events_file)
 
 BOOST_AUTO_TEST_CASE(read_covrages_file)
 {
-    ktools::filetool::CoveragesFile file("examples");
+    ktools::filetool::CoveragesBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
     BOOST_REQUIRE_EQUAL(89, nrec);
 
-	ktools::filetool::coveragesdata rec;
+	ktools::filetool::coveragedata rec;
 	int count = 0;
     while (file.read(rec)) {
         count++;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(read_covrages_file)
 
 BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file)
 {
-    ktools::filetool::DamageBinDictionaryFile file("examples");
+    ktools::filetool::DamageBinDictonaryBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
     BOOST_REQUIRE_EQUAL(102, nrec);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(read_damage_bin_dictionary_file)
 
 BOOST_AUTO_TEST_CASE(read_vulnerabilities_file)
 {
-    ktools::filetool::VulnerabilitiesFile file("examples");
+    ktools::filetool::VulnerabilityBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
     BOOST_REQUIRE_EQUAL(2283270, nrec);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(read_vulnerabilities_file)
 
 BOOST_AUTO_TEST_CASE(read_footprint_index_file)
 {
-    ktools::filetool::FootprintIndexFile file("examples", false);
+    ktools::filetool::FootprintIndexBinFileReader file("examples");
 
     uint32_t nrec = file.num_records();
     BOOST_REQUIRE_EQUAL(249, nrec);
@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(read_footprint_index_file)
 
 BOOST_AUTO_TEST_CASE(read_footprint_file)
 {
-    ktools::filetool::FootprintIndexFile index_file("examples", false);
-    ktools::filetool::FootprintFile file("examples", false);
+    ktools::filetool::FootprintIndexBinFileReader index_file("examples");
+    ktools::filetool::FootprintBinFileReader file("examples");
 
     EventIndex index;
     while (index_file.read(index)) {
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(read_footprint_file)
 
 BOOST_AUTO_TEST_CASE(read_fm_policy_tc_file)
 {
-	ktools::filetool::FMPolicyTCFile file("examples");
+	ktools::filetool::FMPolicyTCBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(96, nrec);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(read_fm_policy_tc_file)
 
 BOOST_AUTO_TEST_CASE(read_fmprofile_file)
 {
-	ktools::filetool::FMProfileFile file("examples");
+	ktools::filetool::FMProfileBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(89, nrec);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(read_fmprofile_file)
 
 BOOST_AUTO_TEST_CASE(read_fmprogramme_file)
 {
-	ktools::filetool::FMProgrammeFile file("examples");
+	ktools::filetool::FMProgrammeBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(183, nrec);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(read_fmprogramme_file)
 
 BOOST_AUTO_TEST_CASE(read_fmsummaryxref_file)
 {
-	ktools::filetool::FMSummaryXrefFile file("examples");
+	ktools::filetool::FMSummaryXrefBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(4, nrec);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(read_fmsummaryxref_file)
 
 BOOST_AUTO_TEST_CASE(read_fmxref_file)
 {
-	ktools::filetool::FMXrefFile file("examples");
+	ktools::filetool::FMXrefBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(2, nrec);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(read_fmxref_file)
 
 BOOST_AUTO_TEST_CASE(read_gul_summary_xref_file)
 {
-	ktools::filetool::GulSummaryXrefFile file("examples");
+	ktools::filetool::GulSummaryXrefBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(178, nrec);
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(read_gul_summary_xref_file)
 
 BOOST_AUTO_TEST_CASE(read_periods_file)
 {
-	ktools::filetool::PeriodsFile file("examples");
+	ktools::filetool::PeriodsBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(3, nrec);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(read_periods_file)
 
 BOOST_AUTO_TEST_CASE(read_return_period_file)
 {
-	ktools::filetool::ReturnPeriodFile file("examples");
+	ktools::filetool::ReturnPeriodBinFileReader file("examples");
 
 	uint32_t nrec = file.num_records();
 	BOOST_REQUIRE_EQUAL(14, nrec);

@@ -37,7 +37,7 @@
 #include <string>
 #include <list>
 #include <functional>
-#include <map>
+#include <vector>
 #include <string.h>
 #include <errno.h>
 
@@ -45,75 +45,47 @@
 
 namespace ktools { namespace filetool {
 
-/**
- * Data type based choice for csv file formatting
-*/
-template<typename T>
-struct CsvFormatter {
-	std::string header();
-	std::string row(const T& row);
-};
-
-template<typename T>
-struct CsvStructInitializer {
-	void initilize(T& s, const std::string& field_name, const std::string& field_value);
-};
+	template<typename T>
+	struct FileReaderSpecialization;
 
 template<typename T>
 class BaseFileReader
 {
 protected:
-    BaseFileReader(const std::string& object_name, const std::string& prefix, const std::string& object_file) {
-        std::string filename = prefixed_path(prefix, object_file);
-        _stream.open(filename, std::ios::in | std::ios::binary);
+    BaseFileReader(const std::string& path) {
+        _stream.open(path, std::ios::in | std::ios::binary);
         if (!_stream) {
-            LOG_ERROR << "Can not open " << filename << ": " << strerror(errno);
+            LOG_ERROR << "Can not open " << path << ": " << strerror(errno);
             exit(EXIT_FAILURE);
         }
 
-    	LOG_INFO << "Reading " << object_name << " from " << filename;
+		LOG_INFO << "Reading " << FileReaderSpecialization<T>::object_name() << " from " << path;
     }
+
+public:
 
     virtual ~BaseFileReader() {
         _stream.close();
     }
 
 public:
-    uint32_t num_records() {
-        _stream.seekg(0, _stream.end);
-        int sz = _stream.tellg();
-        _stream.seekg(0, _stream.beg);
-
-        return static_cast<uint32_t>(sz / record_size());
-    }
-
-    virtual bool read(T& rec) {
-        _stream.read(reinterpret_cast<char *>(&rec), sizeof(T));
-
-        bool fail = !_stream;
-
-        return !fail;
-    }
-
-protected:
-
-	virtual int record_size() const {
-		return sizeof(T);
-	}
-
-private:
-
-    std::string prefixed_path(const std::string& prefix, const std::string& filename) {
-        if (!prefix.empty()) 
-        {
-            return prefix + "/" + filename;
-        }
-
-        return filename;
-    }
+	virtual bool read(T& rec) = 0;
 
 protected:
     std::ifstream _stream;
+};
+
+template<typename T>
+struct FileReaderSpecialization {
+	static std::string object_name() { return ""; }
+	static std::string bin_filename() { return ""; }
+	static std::string csv_header() { return ""; }
+
+	static BaseFileReader<T>* csv_reader(const std::string& path) { return nullptr; }
+	static BaseFileReader<T>* bin_reader(const std::string& prefix) { return nullptr;  }
+
+	static void to_csv(const T& row, std::stringstream& ss) {}
+	static void from_csv(T& s, const std::string& field_name, const std::string& field_value) {}
 };
 
 }}

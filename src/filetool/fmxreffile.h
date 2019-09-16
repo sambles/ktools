@@ -34,39 +34,34 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FMXrefFile : public BaseFileReader<fmXref>
-{
-public:
-	FMXrefFile(const std::string& prefix)
-		: BaseFileReader("fm xref file", prefix, FMXREF_FILE)
-	{}
-
-	virtual ~FMXrefFile() {}
-};
+typedef BinFileReader<fmXref> FMXrefBinFileReader;
+typedef CsvFileReader<fmXref> FMXrefCsvFileReader;
 
 template<>
-struct CsvFormatter<fmXref> {
-	std::string header() {
+struct FileReaderSpecialization<fmXref> {
+	static std::string object_name() { return "fm xref"; }
+	static std::string bin_filename() { return FMXREF_FILE; }
+	static std::string csv_header() { return "output_id,agg_id,layer_id"; }
 
-		return "output_id,agg_id,layer_id";
+	static BaseFileReader<fmXref>* csv_reader(const std::string& path) {
+		return new FMXrefCsvFileReader(path);
 	}
 
-	std::string row(const fmXref& rec) {
-		std::stringstream ss;
+	static BaseFileReader<fmXref>* bin_reader(const std::string& prefix) {
+		return new FMXrefBinFileReader(prefix);
+	}
+
+	static void to_csv(const fmXref& rec, std::stringstream& ss) {
 		ss << rec.output_id << ',' << rec.agg_id << ',' << rec.layer_id;
-
-		return ss.str();
 	}
-};
 
-template<>
-struct CsvStructInitializer<fmXref> {
-	void initilize(fmXref& s, const std::string& field_name, const std::string& field_value) {
+	static void from_csv(fmXref& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "output_id") {
 			s.output_id = std::stoi(field_value);
 		}

@@ -72,7 +72,7 @@ public:
 	};
 
 private:
-	typedef std::function<void(const std::string&, Format)> ConvertFunction;
+	typedef std::function<void(const std::string&, Format, Format)> ConvertFunction;
 	typedef std::map<std::string, FileType> FileTypeMap;
 	typedef std::map<std::string, Format> FormatMap;
 	typedef std::map<FileType, ConvertFunction> ExecutorMap;

@@ -34,39 +34,34 @@
 #pragma once
 
 #include <sstream>
-#include "BaseFileReader.h"
+#include "binfilereader.h"
+#include "csvfilereader.h"
 #include "../include/oasis.h"
 
 namespace ktools { namespace filetool {
 
-class FMProgrammeFile : public BaseFileReader<fm_programme>
-{
-public:
-	FMProgrammeFile(const std::string& prefix)
-		: BaseFileReader("fm programme file", prefix, FMPROGRAMME_FILE)
-	{}
-
-	virtual ~FMProgrammeFile() {}
-};
+typedef BinFileReader<fm_programme> FMProgrammeBinFileReader;
+typedef CsvFileReader<fm_programme> FMProgrammeCsvFileReader;
 
 template<>
-struct CsvFormatter<fm_programme> {
-	std::string header() {
+struct FileReaderSpecialization<fm_programme> {
+	static std::string object_name() { return "fm programme"; }
+	static std::string bin_filename() { return FMPROGRAMME_FILE; }
+	static std::string csv_header() { return "from_agg_id,level_id,to_agg_id"; }
 
-		return "from_agg_id,level_id,to_agg_id";
+	static BaseFileReader<fm_programme>* csv_reader(const std::string& path) {
+		return new FMProgrammeCsvFileReader(path);
 	}
 
-	std::string row(const fm_programme& rec) {
-		std::stringstream ss;
+	static BaseFileReader<fm_programme>* bin_reader(const std::string& prefix) {
+		return new FMProgrammeCsvFileReader(prefix);
+	}
+
+	static void to_csv(const fm_programme& rec, std::stringstream& ss) {
 		ss << rec.from_agg_id << ',' << rec.level_id << ',' << rec.to_agg_id;
-
-		return ss.str();
 	}
-};
 
-template<>
-struct CsvStructInitializer<fm_programme> {
-	void initilize(fm_programme& s, const std::string& field_name, const std::string& field_value) {
+	static void from_csv(fm_programme& s, const std::string& field_name, const std::string& field_value) {
 		if (field_name == "from_agg_id") {
 			s.from_agg_id = std::stoi(field_value);
 		}
