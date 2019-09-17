@@ -3,8 +3,9 @@ target_sources(fmcalc
 	PRIVATE
 		fmcalc.cpp fmcalc.h main.cpp fmcalcrules.cpp fmcalcdoit.cpp fmstructs.h
 )
+target_link_libraries(fmcalc Boost::log)
 if (WIN32)
-	target_link_libraries(fmcalc wingetopt)
+	target_link_libraries(fmcalc Boost::log wingetopt)
 endif()
 
 # -------------------------------------------------------------------------

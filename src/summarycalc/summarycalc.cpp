@@ -52,8 +52,10 @@ Author: Ben Matharu  email: ben.matharu@oasislmf.org
 using namespace std;
 #include "../include/oasis.h"
 #include "summarycalc.h"
-
-
+#include "ItemsFile.h"
+#include "CoveragesFile.h"
+#include "gulsummaryxreffile.h"
+#include "fmsummaryxreffile.h"
 
 bool summarycalc::isGulStream(unsigned int stream_type)
 {
@@ -100,7 +102,7 @@ void summarycalc::reset_sssl_array(int sample_size)
 loss_exp **summarycalc::alloc_ssl_arrays(int summary_set, int sample_size)
 {
 	if (min_summary_id_[summary_set] != 1) {
-		fprintf(stderr, "summarycalc: Minimum summary ID is not equal to one\n");
+		LOG_ERROR << "summarycalc: Minimum summary ID is not equal to one";
 		exit(-1);
 	}
 	int maxsummaryids = max_summary_id_[summary_set] ;
@@ -153,145 +155,89 @@ void summarycalc::init_c_to_s()
 		}
 	}
 }
+
 void summarycalc::init_o_to_s()
 {
 	for (int i = 0; i < MAX_SUMMARY_SETS; i++) {
 		if (fout[i] != nullptr) co_to_s_[i] = new coverage_id_or_output_id_to_Summary_id;
 	}
 }
+
 void summarycalc::loaditemtocoverage()
 {
-	FILE* fin = NULL;
-	std::string file = ITEMS_FILE;
-	if (inputpath_.length() > 0) {
-		file = inputpath_ + file.substr(5);
-	}
-	fin = fopen(file.c_str(), "rb");
-	if (fin == NULL) {
-		fprintf(stderr, "%s: cannot open %s\n", __func__, file.c_str());
-		exit(EXIT_FAILURE);
-	}
-
-	flseek(fin, 0L, SEEK_END);
-	long long sz = fltell(fin);
-	flseek(fin, 0L, SEEK_SET);
-	int last_item_id = 0;
-	unsigned int nrec = (unsigned int)sz / (unsigned int)sizeof(item);
-	item_to_coverage_.resize(nrec + 1, 0);
+    ktools::filetool::ItemBinFileReader file("./");
+	item_to_coverage_.resize(file.num_records() + 1, 0);
 
 	item itm;
-	size_t i = fread(&itm, sizeof(itm), 1, fin);
-	while (i != 0) {
+    int last_item_id = 0;
+	while (file.read(itm)) {
 		last_item_id++;
 		if (itm.id != last_item_id) {
-			fprintf(stderr, "Item ids are not contiguous or do not start from one");
+			LOG_ERROR << "Item ids are not contiguous or do not start from one";
 			exit(-1);
 		}
 		last_item_id = itm.id;
 		item_to_coverage_[itm.id] = itm.coverage_id;
-		i = fread(&itm, sizeof(itm), 1, fin);
 	}
-	fclose(fin);
-
 }
+
 bool summarycalc::loadcoverages()
 {
-	std::string file = COVERAGES_FILE;
-	if (inputpath_.length() > 0) {
-		file = inputpath_ + file.substr(5);
-	}
-	FILE *fin = fopen(file.c_str(), "rb");
-	if (fin == NULL) {
-		fprintf(stderr, "%s: Error opening file %s\n", __func__, COVERAGES_FILE);
-		exit(-1);
-	}
+    ktools::filetool::CoveragesBinFileReader file("./");
 
-	flseek(fin, 0L, SEEK_END);
-	long long sz = fltell(fin);
-	flseek(fin, 0L, SEEK_SET);
+	coverages_.resize(file.num_records() + 1);
 
-	OASIS_FLOAT tiv;
-	unsigned int nrec = (unsigned int)sz / (unsigned int) sizeof(tiv);
-
-	coverages_.resize(nrec + 1);
-	int coverage_id = 0;
-	int i = (int) fread(&tiv,sizeof(tiv),1, fin);
-	while (i != 0) {
-		coverage_id++;
-		coverages_[coverage_id] = tiv;
-		i = (int)fread(&tiv, sizeof(tiv),
-			1, fin);
+	ktools::filetool::coveragedata rec;
+	while (file.read(rec)) {
+		coverages_[rec.coverage_id] = rec.tiv;
 	}
 
-	fclose(fin);
 	return true;
-
 }
+
+template<typename T>
+void summarycalc::generic_load_summaryxref(std::function<int(const T&)> get_id) {
+    ktools::filetool::BinFileReader<T> file("./");
+    init_o_to_s();
+
+    T s;
+    while (file.read(s)) {
+        if (s.summaryset_id > 9) {
+            LOG_ERROR
+                << __func__ << "Invalid summary set id " << s.summaryset_id
+                << "found in "
+                << ktools::filetool::FileReaderSpecialization<T>::object_name()
+                << " file";
+            ::exit(-1);
+        }
+
+		if (fout[s.summaryset_id] != nullptr) {
+            if (s.summary_id < min_summary_id_[s.summaryset_id]) {
+                min_summary_id_[s.summaryset_id] = s.summary_id;
+            }
+            if (s.summary_id > max_summary_id_[s.summaryset_id]) {
+                max_summary_id_[s.summaryset_id] = s.summary_id;
+            }
+
+			// Make sure the array is big enough
+			if ((*co_to_s_[s.summaryset_id]).size() < (get_id(s) + 1)) {
+                (*co_to_s_[s.summaryset_id]).resize(get_id(s) + 1, 0);
+            }
+            (*co_to_s_[s.summaryset_id])[get_id(s)] = s.summary_id;
+        }
+    }
+}
+
 void summarycalc::loadgulsummaryxref()
 {
-	std::string file = GULSUMMARYXREF_FILE;
-	if (inputpath_.length() > 0) {
-		file = inputpath_ + file.substr(5);
-	}
-	FILE *fin = fopen(file.c_str(), "rb");
-	if (fin == NULL) {
-		fprintf(stderr, "%s: Error opening file %s\n", __func__, GULSUMMARYXREF_FILE);
-		::exit(-1);
-	}
-
-	init_c_to_s();
-	gulsummaryxref s;
-	int i = (int)fread(&s, sizeof(gulsummaryxref), 1, fin);
-	while (i != 0) {
-		if (s.summaryset_id > 9) {
-			fprintf(stderr, "%s: Invalid summaryset id  %d found in %s\n", __func__, s.summaryset_id, GULSUMMARYXREF_FILE);
-			::exit(-1);
-		}
-		if (fout[s.summaryset_id] != nullptr) {
-			if (s.summary_id < min_summary_id_[s.summaryset_id]) min_summary_id_[s.summaryset_id] = s.summary_id;
-			if (s.summary_id > max_summary_id_[s.summaryset_id]) max_summary_id_[s.summaryset_id] = s.summary_id;
-			//co_to_s[s.summaryset_id]->insert({ s.coverage_id,s.summary_id });
-			(*co_to_s_[s.summaryset_id])[s.coverage_id] = s.summary_id ;
-		}
-		i = (int) fread(&s, sizeof(gulsummaryxref), 1, fin);
-	}
-
-	fclose(fin);
+    generic_load_summaryxref<gulsummaryxref>(
+        [](const gulsummaryxref& rec) -> int { return rec.coverage_id; });
 }
 
-void summarycalc::loadsummaryxref(const std::string& filename)
+void summarycalc::loadsummaryxref()
 {
-	//std::string file = FMSUMMARYXREF_FILE;
-	std::string file = filename;
-	if (inputpath_.length() > 0) {
-		file = inputpath_ + file.substr(5);
-	}
-	FILE *fin = fopen(file.c_str(), "rb");
-	if (fin == NULL) {
-		fprintf(stderr, "%s: Error opening file %s\n", __func__, FMSUMMARYXREF_FILE);
-		::exit(-1);
-	}
-
-	init_o_to_s();
-
-	fmsummaryxref s;
-	int i = (int)fread(&s, sizeof(fmsummaryxref), 1, fin);
-	while (i != 0) {
-		if (s.summaryset_id > 9) {
-			fprintf(stderr, "%s: Invalid summaryset id  %d found in %s\n", __func__, s.summaryset_id, FMSUMMARYXREF_FILE);
-			::exit(-1);
-		}
-		if (fout[s.summaryset_id] != nullptr) {
-			if (s.summary_id < min_summary_id_[s.summaryset_id]) min_summary_id_[s.summaryset_id] = s.summary_id;
-			if (s.summary_id > max_summary_id_[s.summaryset_id]) max_summary_id_[s.summaryset_id] = s.summary_id;
-			// co_to_s[s.summaryset_id]->insert({ s.output_id,s.summary_id });
-			if ((*co_to_s_[s.summaryset_id]).size() < (s.output_id + 1)) (*co_to_s_[s.summaryset_id]).resize(s.output_id + 1, 0);
-			(*co_to_s_[s.summaryset_id])[s.output_id] = s.summary_id ;
-		}
-		i = (int) fread(&s, sizeof(fmsummaryxref), 1, fin);
-	}
-
-		fclose(fin);
+    generic_load_summaryxref<fmsummaryxref>(
+        [](const fmsummaryxref& rec) -> int { return rec.output_id; });
 }
 
 void summarycalc::outputsummaryset(int sample_size, int summary_set, int event_id)
@@ -341,7 +287,7 @@ void summarycalc::openpipe(int summary_id, const std::string &pipe)
 		FILE *f = fopen(pipe.c_str(), "wb");
 		if (f != nullptr) fout[summary_id] = f;
 		else {
-			fprintf(stderr, "%s: Cannot open %s for output\n", __func__, pipe.c_str());
+            LOG_ERROR << __func__ << "Can not open " << pipe.c_str() << " for output";
 			::exit(-1);
 		}
 	}
@@ -392,7 +338,6 @@ void summarycalc::processsummeryset(int summaryset, int event_id, int coverage_i
 	int summary_id = p[coverage_id];	
 	ssl[summary_id][sidx+2].loss += gul;
 }
-
 
 void summarycalc::dosummary(int sample_size,int event_id,int coverage_or_output_id,int sidx, OASIS_FLOAT gul, OASIS_FLOAT expval)
 {
@@ -469,7 +414,7 @@ void summarycalc::dogulitemxsummary()
 			}
 			return;
 		}
-		std::cerr << "summarycalc: Unexpected Gul stream type " << stream_type << " expecting gulitem stream\n";
+		LOG_ERROR << "summarycalc: Unexpected Gul stream type " << stream_type << " expecting gulitem stream";
 		::exit(-1);
 	}
 }
@@ -508,12 +453,12 @@ void summarycalc::dogulcoveragesummary()
 			return;
 		}
 
-		std::cerr << "summarycalc: Gul stream type " << stream_type << " not supported\n";
+		LOG_ERROR << "summarycalc: Gul stream type " << stream_type << " not supported";
 		::exit(-1);
 	}
 	else {
-		std::cerr << "summarycalc: Not a gul stream\n";
-		std::cerr << "summarycalc: invalid stream type: " << streamtype << "\n";
+		LOG_ERROR << "summarycalc: Not a gul stream";
+		LOG_ERROR << "summarycalc: invalid stream type: " << streamtype;
 	}
 	
 	::exit(-1);
@@ -547,64 +492,49 @@ void summarycalc::dosummaryprocessing(int samplesize)
 	}
 	if (havedata) outputsummary(samplesize, fh.event_id);
 }
+
+void summarycalc::generic_do_summary() {
+    outputstreamtype();
+
+    unsigned int streamtype = 0;
+    int i = (int)fread(&streamtype, sizeof(streamtype), 1, stdin);
+    if (i) {
+        if (isFMStream(streamtype)) {
+            unsigned int samplesize = 0;
+            i = (int)fread(&samplesize, sizeof(samplesize), 1, stdin);
+            if (i) {
+                dosummaryprocessing(samplesize);
+            } else {
+                LOG_ERROR << "summarycalc: Read error on stream";
+				return;
+	        }
+        } else {
+            LOG_ERROR << "summarycalc: Not a fm stream"
+                      << "summarycalc: invalid stream type: " << streamtype;
+        }
+    } else {
+        LOG_ERROR << "summarycalc: Read error on stream";
+    }
+    ::exit(-1);
+}
+
 void summarycalc::dofmsummary()
 {
-	loadsummaryxref(FMSUMMARYXREF_FILE);
-	outputstreamtype();
-	unsigned int streamtype = 0;
-	int i = (int) fread(&streamtype, sizeof(streamtype), 1, stdin);
-	if (i) {
-		if (isFMStream(streamtype) == true) {
-			int stream_type = streamtype & streamno_mask;
-			unsigned int samplesize = 0;
-			i = (int) fread(&samplesize, sizeof(samplesize), 1, stdin);
-			if (i)	dosummaryprocessing(samplesize);
-			else std::cerr << "summarycalc: Read error on stream\n";
-			return;
-		}
-		else {
-			std::cerr << "summarycalc: Not a fm stream\n";
-			std::cerr << "summarycalc: invalid stream type: " << streamtype << "\n";
-		}
-	}
-	else {
-		std::cerr << "summarycalc: Read error on stream\n";
-	}
-	::exit(-1);
-
+	loadsummaryxref();
+    generic_do_summary();
 }
 
 // the item stream is going behave more like the fm stream execept the input will be of type item not fm 
 void summarycalc::dogulitemsummary()
 {
-	loadsummaryxref(GULSUMMARYXREF_FILE);
-	outputstreamtype();
-	unsigned int streamtype = 0;
-	int i = (int) fread(&streamtype, sizeof(streamtype), 1, stdin);
-	if (i) {
-		if (isFMStream(streamtype) == true) {
-			int stream_type = streamtype & streamno_mask;
-			unsigned int samplesize = 0;
-			i =(int) fread(&samplesize, sizeof(samplesize), 1, stdin);
-			if (i)	dosummaryprocessing(samplesize);
-			else std::cerr << "summarycalc: Read error on stream\n";
-			return;
-		}
-		else {
-			std::cerr << "summarycalc: Not a fm stream\n";
-			std::cerr << "summarycalc: invalid stream type: " << streamtype << "\n";
-		}
-	}
-	else {
-		std::cerr << "summarycalc: Read error on stream\n";
-	}
-	::exit(-1);
-
+	loadgulsummaryxref();
+    generic_do_summary();
 }
+
 void summarycalc::doit()
 {
 	if (inputtype_ == UNKNOWN) {
-		fprintf(stderr,"summarycalc: stream type unknown\n");
+        LOG_ERROR << "summarycalc: stream type unknown";
 		return;
 	}
 	

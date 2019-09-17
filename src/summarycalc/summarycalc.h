@@ -40,7 +40,7 @@ Author: Ben Matharu  email: ben.matharu@oasislmf.org
 
 #include <map>
 #include <vector>
-
+#include <functional>
 
 #define MAX_SUMMARY_SETS 10
 
@@ -79,7 +79,7 @@ private:
 	void alloc_sse_array();
 	void init_c_to_s();
 	void init_o_to_s();
-	void loadsummaryxref(const std::string &filename);
+	void loadsummaryxref();
 	void loadgulsummaryxref();
 	void outputsummaryset(int sample_size, int summary_set, int event_id);	
 	void outputstreamtype(int summary_set);
@@ -96,6 +96,7 @@ private:
 	void loaditemtocoverage();
 	bool isGulStream(unsigned int stream_type);
 	bool isFMStream(unsigned int stream_type);
+    template <typename T> void generic_load_summaryxref(std::function<int(const T&)> get_id);
 
 public:
 	summarycalc();
@@ -104,6 +105,7 @@ public:
 	void dogulitemsummary();
 	void dogulitemxsummary();
 	void dofmsummary();
+    void generic_do_summary();
 	void doit();
 	void openpipe(int summary_id, const std::string &pipe);
 	void setgulcoveragemode() { inputtype_ = GUL_COVERAGE_STREAM; };

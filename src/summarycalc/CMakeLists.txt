@@ -4,3 +4,7 @@ target_sources(summarycalc
 		summarycalc.cpp summarycalc.h main.cpp
 )
 
+target_link_libraries(summarycalc Boost::log)
+if (WIN32)
+	target_link_libraries(summarycalc Boost::log wingetopt)
+endif()

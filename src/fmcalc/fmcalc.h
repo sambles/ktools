@@ -81,7 +81,7 @@ private:
 	std::vector<OASIS_FLOAT> item_to_tiv_;	
 	void init_programme(int maxrunLevel);
 	void init_profile();
-	void init_profile_rec(fm_profile_new &f);
+	void init_profile_rec(const fm_profile_new &f);
 	void init_itemtotiv();
 	void init_fmxref();
 	void init(int MaxRunLevel);

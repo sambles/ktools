@@ -40,6 +40,7 @@ Author: Ben Matharu  email: ben.matharu@oasislmf.org
 #include "fmcalc.h"
 #include <vector>
 #include <stdio.h>
+#include "fmprofilefile.h"
 
 void add_tc(unsigned char tc_id, OASIS_FLOAT tc_val, std::vector<tc_rec> &tc_vec)
 {
@@ -774,7 +775,7 @@ void fmcalc::dofmcalc(std::vector <LossRec> &agg_vec, int layer)
 	}
 }
 
-void fmcalc::init_profile_rec(fm_profile_new &f)
+void fmcalc::init_profile_rec(const fm_profile_new &f)
 {
 	profile_rec_new p;
 	p.calcrule_id = f.calcrule_id;
@@ -890,27 +891,18 @@ void fmcalc::init_profile_rec(fm_profile_new &f)
 
 void fmcalc::init_profile()
 {
-	FILE *fin = NULL;
-	std::string file = FMPROFILE_FILE_NEW;
-	if (inputpath_.length() > 0) {
-		file = inputpath_ + file.substr(5);
-	}
-	fin = fopen(file.c_str(), "rb");
-	if (fin == NULL) {
-		fprintf(stderr, "%s: cannot open %s\n", __func__, file.c_str());
-		exit(EXIT_FAILURE);
-	}
+    ktools::filetool::FMProfileBinFileReader file("./");
+
 	fm_profile_new f;
-	int i = fread(&f, sizeof(f), 1, fin);
-	while (i != 0) {		
+    while (file.read(f)) {
 		init_profile_rec(f);
-		if (noop_profile_id < f.profile_id) noop_profile_id = f.profile_id;
-		i = fread(&f, sizeof(f), 1, fin);
+        if (noop_profile_id < f.profile_id) {
+            noop_profile_id = f.profile_id;
+        }
 	}
 	noop_profile_id++;
 	fm_profile_new d;	// dummy
 	d.profile_id = noop_profile_id;
 	d.calcrule_id = 14;
 	init_profile_rec(d);
-	fclose(fin);
 }
