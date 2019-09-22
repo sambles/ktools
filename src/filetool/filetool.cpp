@@ -72,6 +72,7 @@ void print_data(ktools::filetool::BaseFileReader<T>& reader,
                                 sizeof(rec));
                 break;
             case ktools::filetool::FileTool::FMT_CSV:
+                ss.str("");
                 ss.clear();
                 ktools::filetool::FileReaderSpecialization<T>::to_csv(rec, ss);
                 std::cout << ss.str() << std::endl;

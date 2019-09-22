@@ -53,16 +53,36 @@ void print_help() {
         << std::endl;
 }
 
-int main(int argc, char** argv) {
-    ktools::filetool::FileTool::Format input =
-        ktools::filetool::FileTool::FMT_UNKNOWN;
-    ktools::filetool::FileTool::Format output =
-        ktools::filetool::FileTool::FMT_UNKNOWN;
-    ktools::filetool::FileTool::FileType file_type =
-        ktools::filetool::FileTool::FT_UNKOWN;
-    std::string prefix = "";
-    bool pipe_mode = false;
+void configure_by_name(const std::string& command_name,
+                       ktools::filetool::FileTool::Format& input,
+                       ktools::filetool::FileTool::Format& output,
+                       ktools::filetool::FileTool::FileType& file_type) {
+	// Start by setting the input and output formats
+    if (command_name.find_last_of("tocsv") != std::string::npos) {
+        input = ktools::filetool::FileTool::FMT_BIN;
+        output = ktools::filetool::FileTool::FMT_CSV;
+    } else if (command_name.find_last_of("tobin") != std::string::npos) {
+        input = ktools::filetool::FileTool::FMT_CSV;
+        output = ktools::filetool::FileTool::FMT_BIN;    
+	}
 
+	// Grab the filetype by removing the suffix tobin/tocsv
+    std::string filetype = command_name.substr(0, command_name.size() - 5);
+    if (filetype == "coverage") {
+        file_type = ktools::filetool::FileTool::FT_COVERAGES;
+    } else if (filetype == "damagebin") {
+        file_type = ktools::filetool::FileTool::FT_DAMAGEBINDICT;
+    } else {
+        file_type = ktools::filetool::FileTool::FT_UNKOWN;
+    }
+}
+
+void configure_by_options(int argc, char** argv,
+                          ktools::filetool::FileTool::Format& input,
+                          ktools::filetool::FileTool::Format& output,
+                          ktools::filetool::FileTool::FileType& file_type,
+						  std::string& prefix,
+						  bool& pipe_mode) {
     int opt;
     while ((opt = getopt(argc, argv, "pho:si:sr:st:s")) != -1) {
         switch (opt) {
@@ -76,8 +96,7 @@ int main(int argc, char** argv) {
                 prefix = optarg;
                 break;
             case 't':
-                file_type =
-                    ktools::filetool::FileTool::convert_filetype(optarg);
+                file_type = ktools::filetool::FileTool::convert_filetype(optarg);
                 break;
             case 'p':
                 std::cout << "pipe mode" << std::endl;
@@ -88,6 +107,22 @@ int main(int argc, char** argv) {
                 print_help();
                 exit(0);
         }
+    }
+}
+
+int main(int argc, char** argv) {
+    ktools::filetool::FileTool::Format input = ktools::filetool::FileTool::FMT_UNKNOWN;
+    ktools::filetool::FileTool::Format output = ktools::filetool::FileTool::FMT_UNKNOWN;
+    ktools::filetool::FileTool::FileType file_type = ktools::filetool::FileTool::FT_UNKOWN;
+    std::string prefix = "";
+    bool pipe_mode = false;
+
+    configure_by_options(argc, argv, input, output, file_type, prefix, pipe_mode);
+
+	// If the application name is not filetool, it uses the old filename
+    // which has  filetype and input/output as part of the filename
+    if (std::string(argv[0]).find_last_of("filetool") == std::string::npos) {
+        configure_by_name(argv[0], input, output, file_type);
     }
 
     if (output == ktools::filetool::FileTool::FMT_UNKNOWN) {
