@@ -1,5 +1,11 @@
 name: compile-ktools
-on: [push]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
 jobs:
   osx-11-build:
     runs-on: macos-11
